@@ -1,3 +1,4 @@
+
 ---
 title: "Presentation title"
 subtitle: "Presentation subtitle (if any)"
@@ -31,6 +32,9 @@ library(tidymodels)
 library(palmerpenguins)
 library(knitr)
 library(xaringanthemer)
+
+read.csv("data/communities.data")
+
 ```
 
 ```{r setup, include=FALSE}
