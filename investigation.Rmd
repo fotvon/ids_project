@@ -46,9 +46,19 @@ communities_clean_df <- communities_heading_df %>%
     across(where(is.character) & !c(communityname.string), ~as.numeric(.x))
   )
 
+#lets see some summary statistics of the data. First lets check the mean
 
-df <- communities_heading_df |> 
-  select(-communityname.string)
+summary_stat_communities <- communities_clean_df |> 
+  select(-communityname.string) |> 
+  summarise(
+    across(everything(),
+    ~ round(mean(.x, na.rm = TRUE), digits = 2))
+  ) |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Variable",
+    values_to = "Mean"
+  )
 
 
 ```
