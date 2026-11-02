@@ -19,7 +19,6 @@ library(tidyverse)
 library(readr)
 
 
-
 ```
 
 
@@ -39,14 +38,17 @@ communities_heading_df <- read.csv("data/communities_heading.data")
 
 #time to clean up NA values and figure out what the data even means.
 
-
 communities_clean_df <- communities_heading_df %>%
   mutate(
     across(where(is.character), ~na_if(., "?")),
     across(where(is.character) & !c(communityname.string), ~as.numeric(.x))
   )
 
-#lets see some summary statistics of the data. First lets check the mean
+```
+
+```{r}
+#lets see some summary statistics of the data. Lets check the mean.
+#More of these statisitcs can be found in the "data/communities.names".
 
 summary_stat_communities <- communities_clean_df |> 
   select(-communityname.string) |> 
@@ -60,7 +62,27 @@ summary_stat_communities <- communities_clean_df |>
     values_to = "Mean"
   )
 
+#Now we can see which columns have missing values, and how many.
+communities_clean_df |> 
+  mutate(
+    across(everything(), ~ is.na(.))
+  ) |> 
+  colSums()
+```
 
+
+```{r load-data}
+#Values presented in this table are "normalised" from 0 to 1. A normalised value represents where a value sits on the range. e.g: A value of 0 represents the min/smallest population, while a value of 1 represents the largest population.
+
+#It also needs to be pivoted longer, while the "clean" data looks clean, its not fully clean. we will insert a categorical variable. We will also remove the first 3 variables and fold variable, as it is unsure how they add to the data in a meaningful way.
+
+community_long <- communities_clean_df |> 
+  select(-state.numeric,-county.numeric,-community.numeric,-fold.numeric) |> 
+  pivot_longer(
+    cols = c(population.numeric:ViolentCrimesPerPop.numeric),
+    values_to = "NormalisedValue",
+    names_to = "Category"
+  )
 ```
 
 
