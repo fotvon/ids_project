@@ -68,6 +68,7 @@ communities_clean_df |>
     across(everything(), ~ is.na(.))
   ) |> 
   colSums()
+
 ```
 
 
@@ -76,13 +77,35 @@ communities_clean_df |>
 
 #It also needs to be pivoted longer, while the "clean" data looks clean, its not fully clean. we will insert a categorical variable. We will also remove the first 3 variables and fold variable, as it is unsure how they add to the data in a meaningful way.
 
-community_long <- communities_clean_df |> 
+
+community_long <-   communities_heading_df |> 
+  mutate(
+    across(where(is.character), ~na_if(., "?")),
+    across(where(is.character) & !c(communityname.string), ~as.numeric(.x))
+  ) |> 
   select(-state.numeric,-county.numeric,-community.numeric,-fold.numeric) |> 
   pivot_longer(
-    cols = c(population.numeric:ViolentCrimesPerPop.numeric),
+    cols = c(population.numeric:PolicBudgPerPop.numeric),
     values_to = "NormalisedValue",
     names_to = "Category"
   )
+
 ```
 
+```{r}
+#lets take a look at any correlation between variables
+
+community_long |> 
+  drop_na() |> 
+  ggplot(
+    aes(
+      x=NormalisedValue,
+      y=ViolentCrimesPerPop.numeric
+    )
+  )+
+  geom_point()+
+  facet_wrap(~ Category,
+             ncol = 1)
+
+```
 
