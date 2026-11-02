@@ -24,8 +24,18 @@ library(readr)
 
 
 ```{r load-data}
-
+#Read the data and read it with the correct delimiter
 communities_df <- read.csv("data/communities.data")
+
+#Cleaning up the data frame, converting "?" to NA
+
+#Major issues with just reading this data. The variable names are actually an observation for some "Lakewood city". There are 2 solutions: go through, one by one and rename all the variable names, or figure out someway to restore the variable names.
+
+#After inspection, it does not seem like the variable names are stored in the data set. I also am not sure which headings go where in the data. So fun...
+
+#information also seems to be stored in a strange manner.
+
+communities_heading_df <- read.csv("data/communities_heading.data")
 
 ```
 
