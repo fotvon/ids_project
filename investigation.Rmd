@@ -37,6 +37,20 @@ communities_df <- read.csv("data/communities.data")
 
 communities_heading_df <- read.csv("data/communities_heading.data")
 
+#time to clean up NA values and figure out what the data even means.
+
+
+communities_clean_df <- communities_heading_df %>%
+  mutate(
+    across(where(is.character), ~na_if(., "?")),
+    across(where(is.character) & !c(communityname.string), ~as.numeric(.x))
+  )
+
+
+df <- communities_heading_df |> 
+  select(-communityname.string)
+
+
 ```
 
 
