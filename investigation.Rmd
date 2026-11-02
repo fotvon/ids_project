@@ -70,8 +70,6 @@ communities_clean_df |>
   colSums()
 
 ```
-
-
 ```{r load-data}
 #Values presented in this table are "normalised" from 0 to 1. A normalised value represents where a value sits on the range. e.g: A value of 0 represents the min/smallest population, while a value of 1 represents the largest population.
 
@@ -93,19 +91,47 @@ community_long <-   communities_heading_df |>
 ```
 
 ```{r}
-#lets take a look at any correlation between variables
+#lets take a look at any correlation between variables.
 
-community_long |> 
+community_long |>
+  filter(Category == "medIncome.numeric") |> 
   drop_na() |> 
   ggplot(
     aes(
       x=NormalisedValue,
-      y=ViolentCrimesPerPop.numeric
+      y=ViolentCrimesPerPop.numeric,
     )
   )+
-  geom_point()+
-  facet_wrap(~ Category,
-             ncol = 1)
+  geom_bin_2d(bins=20)+
+  geom_smooth(method = lm,
+              se = TRUE,
+              colour = "red")+
+  theme_bw()
+
+
+#The correlation for each variable should be calculated as well. Might write a function to calculate these values and store them in a matrix. yay...
+
+#lets check if there is already a correlation function.
+
+```
+```{r}
+community_long |>
+  filter(Category == "population.numeric") |> 
+  drop_na() |> 
+  ggplot(
+    aes(
+      x=NormalisedValue,
+      y=ViolentCrimesPerPop.numeric,
+    )
+  )+
+  geom_bin_2d(bins=20)+
+  geom_smooth(method = lm,
+              se = TRUE,
+              colour = "red")+
+  theme_bw()
+```
+
+```{r}
 
 ```
 
