@@ -28,11 +28,9 @@ communities_df <- read.csv("data/communities.data")
 
 #Cleaning up the data frame, converting "?" to NA
 
-#Major issues with just reading this data as it is. The variable names are actually an observation for some "Lakewood city". There are 2 solutions: go through, one by one and rename all the variable names, or figure out someway to restore the variable names.
+#Major issues with just reading this data as it is. The variable names are actually an observation for "Lakewood city". There are 2 solutions: 1) go through, one by one and rename all the variable names, or 2) figure out someway to restore the variable names.
 
 #After inspection, it does not seem like the variable names are stored in the data set. I also am not sure which headings go where in the data. So fun...
-
-#information also seems to be stored in a strange manner.
 
 communities_heading_df <- read.csv("data/communities_heading.data")
 
@@ -106,7 +104,11 @@ community_long |>
   geom_smooth(method = lm,
               se = TRUE,
               colour = "red")+
-  theme_bw()
+  theme_bw()+
+  labs(
+    x = "Median Income",
+    y = "Violent Crimes per Population"
+  )
 
 
 #The correlation for each variable should be calculated as well. Might write a function to calculate these values and store them in a matrix. yay...
@@ -114,6 +116,7 @@ community_long |>
 #lets check if there is already a correlation function.
 
 ```
+
 ```{r}
 community_long |>
   filter(Category == "population.numeric") |> 
@@ -128,10 +131,83 @@ community_long |>
   geom_smooth(method = lm,
               se = TRUE,
               colour = "red")+
-  theme_bw()
+  theme_bw()+
+  labs(
+    x = "Size of Population",
+    y = "Violent Crimes per Population"
+  )
 ```
 
 ```{r}
+#Lets calculate the correlation between median income and violent crime per pop.
+cor(communities_clean_df$medIncome.numeric,communities_clean_df$ViolentCrimesPerPop.numeric)
 
+#Can a column be made describing the correlation between all the other numeric variables with respect to violent crimes per population.
+
+community_long |> 
+  group_by(Category) |> 
+  mutate(CorWViolCim = cor(NormalisedValue,ViolentCrimesPerPop.numeric))
+
+#this works but the number of decimal points are messy, lets round it to 3 decimal places.
+
+#community_long <- community_long |> 
+  #group_by(Category) |> 
+  #mutate(CorWViolCim = round(cor(NormalisedValue,ViolentCrimesPerPop.numeric), digits = 3))
+
+#This does work but there are so many repeated values and observations, it should probably be made into another table for easier reading. Readings also range from -1 to 1, so a magnitude of the correlation should be taken to determine which variables are most correlated with "Violent Crimes" per population.
+
+community_CorWVilCrim <- community_long |> 
+  drop_na(NormalisedValue) |> 
+  group_by(Category) |> 
+  mutate(CorWViolCrim = round(cor(NormalisedValue,ViolentCrimesPerPop.numeric), digits = 3)) |>
+  mutate(MagCorWVilCrim = sqrt(CorWViolCrim^2)) |> 
+  select(Category,CorWViolCrim,MagCorWVilCrim) |> 
+  unique()
+
+#What would also be useful is to maybe see if there are correlations between variables. A good way to do this might be to turn the data into some kind of "matrix" of correlation values. It is also worth noting that the correlation value for something correlated with itself is '1'.
+
+cor(communities_clean_df$population.numeric,communities_clean_df$population.numeric) #this returns '1'
+
+#This will also be a symmetrical matrix.
+
+```
+
+```{r}
+#Each observation needs to be given some kind of ID
+
+X1 <-communities_heading_df |> 
+  mutate(
+    across(where(is.character), ~na_if(., "?")),
+    across(where(is.character) & !c(communityname.string), ~as.numeric(.x)),
+    ID = seq_len(nrow(communities_heading_df))
+    ) |> 
+  select(-communityname.string,-state.numeric,-county.numeric,-community.numeric,-fold.numeric)
+
+
+Y1 <- communities_heading_df |> 
+  mutate(
+    across(where(is.character), ~na_if(., "?")),
+    across(where(is.character) & !c(communityname.string), ~as.numeric(.x)),
+    ID = seq_len(nrow(communities_heading_df))
+    ) |> 
+  select(-communityname.string,-state.numeric,-county.numeric,-community.numeric,-fold.numeric) |> 
+  pivot_longer(
+    cols = c(population.numeric:ViolentCrimesPerPop.numeric),
+    values_to = "NormalisedValue",
+    names_to = "Category"
+  )
+
+Matrix_values <- full_join(Y1,X1) |> 
+  group_by(Category) |> 
+  mutate(
+    across(
+      c(population.numeric:ViolentCrimesPerPop.numeric), ~round(cor(NormalisedValue,., use = "complete.obs"), digits = 3)
+    )
+  ) |> 
+  select(-NormalisedValue,-ID) |> 
+  unique()
+
+#Issue with this result, there are a few bands of just "NA" results. Maybe a better join could be used instead of full_join?
+#The solution was to instead add 'use = "complete.obs"' as this only did calculations when there were 2 values in both vectors.
 ```
 
