@@ -197,7 +197,22 @@ Y1 <- communities_heading_df |>
     names_to = "Category"
   )
 
-Matrix_values <- full_join(Y1,X1) |> 
+#Matrix_values <- full_join(Y1,X1) |> 
+  #group_by(Category) |> 
+  #mutate(
+    #across(
+      #c(population.numeric:ViolentCrimesPerPop.numeric), ~round(cor(NormalisedValue,., use = "complete.obs"), digits = 3)
+    #)
+  #) |> 
+  #select(-NormalisedValue,-ID) |> 
+  #unique()
+
+#Issue with this result, there are a few bands of just "NA" results. Maybe a better join could be used instead of full_join?
+#The solution was to instead add 'use = "complete.obs"' as this only did calculations when there were 2 values in both vectors.
+
+#This can also be cleaned up. and turned into 3 columns: an X1, Y1, and correlation value.
+
+Cor_Values <- full_join(Y1,X1) |> 
   group_by(Category) |> 
   mutate(
     across(
@@ -205,14 +220,7 @@ Matrix_values <- full_join(Y1,X1) |>
     )
   ) |> 
   select(-NormalisedValue,-ID) |> 
-  unique()
-
-#Issue with this result, there are a few bands of just "NA" results. Maybe a better join could be used instead of full_join?
-#The solution was to instead add 'use = "complete.obs"' as this only did calculations when there were 2 values in both vectors.
-
-#This can also be cleaned up. and turned into 3 columns: an X1, Y1, and correlation value.
-
-Cor_Values <- Matrix_values |> 
+  unique() |> 
   rename("X1" = "Category") |> 
   pivot_longer(
     cols = c(population.numeric:ViolentCrimesPerPop.numeric),
