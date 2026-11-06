@@ -42,6 +42,8 @@ communities_clean_df <- communities_heading_df %>%
     across(where(is.character) & !c(communityname.string), ~as.numeric(.x))
   )
 
+communities_clean_df <- communities_clean_df[, colMeans(is.na(communities_clean_df)) <= 0.5]
+
 ```
 
 ```{r}
