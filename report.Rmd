@@ -31,8 +31,7 @@ library(tidyverse)
 
 ## Research Question
 
-Describe your research question here. Include why this question might be of interest. 
-
+Is there a correlation/connection between incomes and employment with violent crimes?
 
 
 

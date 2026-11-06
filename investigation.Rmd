@@ -129,13 +129,13 @@ community_long |>
       y=ViolentCrimesPerPop.numeric,
     )
   )+
-  geom_bin_2d(bins=20)+
+  geom_point(bins=20)+
   geom_smooth(method = lm,
               se = TRUE,
               colour = "red")+
   theme_bw()+
   labs(
-    x = "Size of Population",
+    x = "race",
     y = "Violent Crimes per Population"
   )
 ```
@@ -229,5 +229,9 @@ Cor_Values <- full_join(Y1,X1) |>
     names_to = "Y1",
     values_to = "Correlation"
   )
+```
+
+```{r}
+
 ```
 
