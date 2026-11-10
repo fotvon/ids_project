@@ -71,12 +71,8 @@ communities_clean_df |>
   colSums()
 
 ```
-<<<<<<< HEAD
 
 ```{r}
-=======
-```{r load-data-2}
->>>>>>> e61392cfc57f242f582a648a6bcd84c63eededd6
 #Values presented in this table are "normalised" from 0 to 1. A normalised value represents where a value sits on the range. e.g: A value of 0 represents the min/smallest population, while a value of 1 represents the largest population.
 
 #It also needs to be pivoted longer, while the "clean" data looks clean, its not fully clean. we will insert a categorical variable. We will also remove the first 3 variables and fold variable, as it is unsure how they add to the data in a meaningful way.
@@ -276,7 +272,6 @@ linear_reg() |>
   set_engine("lm") |> 
   fit(ViolentCrimesPerPop.numeric ~ medIncome.numeric, data = communities_clean_df)
 
-<<<<<<< HEAD
 #consider a new model with MedIncome and PctUnemployed as explanatory variables. How does that change the original coefficients?
 
 linear_reg() |> 
