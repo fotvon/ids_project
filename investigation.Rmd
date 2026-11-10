@@ -1,6 +1,6 @@
 ---
 title: "IDS investigation worksheet"
-author: "by IBS: William Mackenzie, Ankita Sahoo, User3, User4 & User5"
+author: "by IBS: William Mackenzie, Ankita Sahoo, Fotini Vonatsou, User4 & User5"
 date: "`r Sys.Date()`"
 output: html_document
 ---
@@ -71,8 +71,12 @@ communities_clean_df |>
   colSums()
 
 ```
+<<<<<<< HEAD
 
 ```{r}
+=======
+```{r load-data-2}
+>>>>>>> e61392cfc57f242f582a648a6bcd84c63eededd6
 #Values presented in this table are "normalised" from 0 to 1. A normalised value represents where a value sits on the range. e.g: A value of 0 represents the min/smallest population, while a value of 1 represents the largest population.
 
 #It also needs to be pivoted longer, while the "clean" data looks clean, its not fully clean. we will insert a categorical variable. We will also remove the first 3 variables and fold variable, as it is unsure how they add to the data in a meaningful way.
@@ -239,6 +243,7 @@ linear_reg() |>
   set_engine("lm") |> 
   fit(ViolentCrimesPerPop.numeric ~ medIncome.numeric, data = communities_clean_df)
 
+<<<<<<< HEAD
 #consider a new model with MedIncome and PctUnemployed as explanatory variables. How does that change the original coefficients?
 
 linear_reg() |> 
@@ -254,4 +259,39 @@ linear_reg() |>
 #Note: with the addition of PctUnemployed and PctPopUnderPov, the coefficient for MedIncome has approached 0.
 
 #Initial guess is that MedIncome is not the best estimator, and that a MedIncomes effects on ViolentCrimesPerPop was quite dependent on and correlated with these other 2 variables.
+=======
+#The correlations between each column and the violent crime column can be calculated. (the absolute value is taken because the strenth of the correlation will be compared, and as such whether it is negative or positive does not matter)
+
+community_corr_ranked <- community_long %>%
+  drop_na(NormalisedValue) %>%
+  group_by(Category) %>%
+  summarise(
+    r = cor(NormalisedValue, ViolentCrimesPerPop.numeric),
+    abs_r = abs(r)
+  ) %>%
+  filter(Category != "ViolentCrimesPerPop.numeric") %>%
+  arrange(desc(abs_r)) %>%
+  filter(Category != "ViolentCrimesPerPop.numeric") %>%
+  filter(abs_r >= 0.5) %>%
+  arrange(desc(abs_r))
+
+#
+
+ggplot(community_corr_ranked, aes(x = r, y = reorder(Category, r), fill = r > 0)) +
+  geom_col(show.legend = FALSE) +
+  scale_fill_manual(values = c("cadetblue3", "indianred3")) +
+  labs(
+    title = "Top Correlates with Violent Crime (|r| >= 0.5)",
+    subtitle = "Positive (coral) vs Negative (blue) Pearson correlation coefficients",
+    x = "Correlation Coefficient (r)",
+    y = "Community Characteristic"
+  ) +
+  theme_bw()
+
+```
+
+
+```{r}
+
+>>>>>>> e61392cfc57f242f582a648a6bcd84c63eededd6
 ```
