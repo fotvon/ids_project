@@ -286,5 +286,7 @@ linear_reg() |>
 
 #Note: with the addition of PctUnemployed and PctPopUnderPov, the coefficient for MedIncome has approached 0.
 
-#Initial guess is that MedIncome is not the best estimator, and that a MedIncomes effects on ViolentCrimesPerPop was quite dependent on and correlated with these other 2 variables.
+#Initial guess is that MedIncome is not the best estimator, and that MedIncomes' effects on ViolentCrimesPerPop was quite dependent on and correlated with these other 2 variables.
+
+#If a coefficient is 0, then any variation in that variable has no effect on the response variable.
 ```
