@@ -17,12 +17,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r load-lib, message = FALSE}
 library(tidyverse)
 library(readr)
+library(tidymodels)
 
 
 ```
 
 
-```{r load-data}
+```{r}
 #Read the data and read it with the correct delimiter
 communities_df <- read.csv("data/communities.data")
 
@@ -70,7 +71,8 @@ communities_clean_df |>
   colSums()
 
 ```
-```{r load-data}
+
+```{r}
 #Values presented in this table are "normalised" from 0 to 1. A normalised value represents where a value sits on the range. e.g: A value of 0 represents the min/smallest population, while a value of 1 represents the largest population.
 
 #It also needs to be pivoted longer, while the "clean" data looks clean, its not fully clean. we will insert a categorical variable. We will also remove the first 3 variables and fold variable, as it is unsure how they add to the data in a meaningful way.
@@ -232,6 +234,24 @@ Cor_Values <- full_join(Y1,X1) |>
 ```
 
 ```{r}
+#look into modeling
+linear_reg() |> 
+  set_engine("lm") |> 
+  fit(ViolentCrimesPerPop.numeric ~ medIncome.numeric, data = communities_clean_df)
 
+#consider a new model with MedIncome and PctUnemployed as explanatory variables. How does that change the original coefficients?
+
+linear_reg() |> 
+  set_engine("lm") |> 
+  fit(ViolentCrimesPerPop.numeric ~ medIncome.numeric+PctUnemployed.numeric, data = communities_clean_df)
+
+#Question: Is the model a better estimator if the intercept approaches 0?
+
+linear_reg() |> 
+  set_engine("lm") |> 
+  fit(ViolentCrimesPerPop.numeric ~ medIncome.numeric+PctUnemployed.numeric+PctPopUnderPov.numeric, data = communities_clean_df)
+
+#Note: with the addition of PctUnemployed and PctPopUnderPov, the coefficient for MedIncome has approached 0.
+
+#Initial guess is that MedIncome is not the best estimator, and that a MedIncomes effects on ViolentCrimesPerPop was quite dependent on and correlated with these other 2 variables.
 ```
-
