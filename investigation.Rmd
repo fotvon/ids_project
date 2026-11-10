@@ -238,28 +238,7 @@ Cor_Values <- full_join(Y1,X1) |>
 ```
 
 ```{r}
-#look into modeling
-linear_reg() |> 
-  set_engine("lm") |> 
-  fit(ViolentCrimesPerPop.numeric ~ medIncome.numeric, data = communities_clean_df)
 
-<<<<<<< HEAD
-#consider a new model with MedIncome and PctUnemployed as explanatory variables. How does that change the original coefficients?
-
-linear_reg() |> 
-  set_engine("lm") |> 
-  fit(ViolentCrimesPerPop.numeric ~ medIncome.numeric+PctUnemployed.numeric, data = communities_clean_df)
-
-#Question: Is the model a better estimator if the intercept approaches 0?
-
-linear_reg() |> 
-  set_engine("lm") |> 
-  fit(ViolentCrimesPerPop.numeric ~ medIncome.numeric+PctUnemployed.numeric+PctPopUnderPov.numeric, data = communities_clean_df)
-
-#Note: with the addition of PctUnemployed and PctPopUnderPov, the coefficient for MedIncome has approached 0.
-
-#Initial guess is that MedIncome is not the best estimator, and that a MedIncomes effects on ViolentCrimesPerPop was quite dependent on and correlated with these other 2 variables.
-=======
 #The correlations between each column and the violent crime column can be calculated. (the absolute value is taken because the strenth of the correlation will be compared, and as such whether it is negative or positive does not matter)
 
 community_corr_ranked <- community_long %>%
@@ -292,6 +271,25 @@ ggplot(community_corr_ranked, aes(x = r, y = reorder(Category, r), fill = r > 0)
 
 
 ```{r}
+#look into modeling
+linear_reg() |> 
+  set_engine("lm") |> 
+  fit(ViolentCrimesPerPop.numeric ~ medIncome.numeric, data = communities_clean_df)
 
->>>>>>> e61392cfc57f242f582a648a6bcd84c63eededd6
+<<<<<<< HEAD
+#consider a new model with MedIncome and PctUnemployed as explanatory variables. How does that change the original coefficients?
+
+linear_reg() |> 
+  set_engine("lm") |> 
+  fit(ViolentCrimesPerPop.numeric ~ medIncome.numeric+PctUnemployed.numeric, data = communities_clean_df)
+
+#Question: Is the model a better estimator if the intercept approaches 0?
+
+linear_reg() |> 
+  set_engine("lm") |> 
+  fit(ViolentCrimesPerPop.numeric ~ medIncome.numeric+PctUnemployed.numeric+PctPopUnderPov.numeric, data = communities_clean_df)
+
+#Note: with the addition of PctUnemployed and PctPopUnderPov, the coefficient for MedIncome has approached 0.
+
+#Initial guess is that MedIncome is not the best estimator, and that a MedIncomes effects on ViolentCrimesPerPop was quite dependent on and correlated with these other 2 variables.
 ```
