@@ -274,19 +274,118 @@ linear_reg() |>
 
 #consider a new model with MedIncome and PctUnemployed as explanatory variables. How does that change the original coefficients?
 
-linear_reg() |> 
+Model_Econ2 <- linear_reg() |> 
   set_engine("lm") |> 
-  fit(ViolentCrimesPerPop.numeric ~ medIncome.numeric+PctUnemployed.numeric, data = communities_clean_df)
+  fit(ViolentCrimesPerPop.numeric ~ medIncome.numeric+PctUnemployed.numeric, data = communities_clean_df) |> 
+  print()
 
 #Question: Is the model a better estimator if the intercept approaches 0?
 
-linear_reg() |> 
+Model_Econ3 <- linear_reg() |> 
   set_engine("lm") |> 
-  fit(ViolentCrimesPerPop.numeric ~ medIncome.numeric+PctUnemployed.numeric+PctPopUnderPov.numeric, data = communities_clean_df)
+  fit(ViolentCrimesPerPop.numeric ~ medIncome.numeric+PctUnemployed.numeric+PctPopUnderPov.numeric, data = communities_clean_df) |> 
+  print()
+
+Model_Econ3_Aug <- augment(Model_Econ3$fit)
+
+Model_Econ3_Aug |> 
+  ggplot(
+    aes(x=.fitted,
+        y=.resid)
+  )+
+  geom_point(
+    alpha = 0.3
+  )
 
 #Note: with the addition of PctUnemployed and PctPopUnderPov, the coefficient for MedIncome has approached 0.
 
 #Initial guess is that MedIncome is not the best estimator, and that MedIncomes' effects on ViolentCrimesPerPop was quite dependent on and correlated with these other 2 variables.
 
 #If a coefficient is 0, then any variation in that variable has no effect on the response variable.
+
+
+Model_Econ4 <- linear_reg() |> 
+  set_engine("lm") |> 
+  fit(ViolentCrimesPerPop.numeric ~ PctUnemployed.numeric+PctPopUnderPov.numeric, data = communities_clean_df)
+
+Model_Econ4_Aug <- augment(Model_Econ4$fit)
+
+Model_Econ4_Aug |> 
+  ggplot(
+    aes(x=.fitted,
+        y=.resid)
+  )+
+  geom_point(
+    alpha = 0.3
+  )
+
 ```
+```{r}
+#Wealth variables:
+#medIncome,PctPopUnderPov
+
+Model_Wealth1 <- linear_reg() |> 
+  set_engine("lm") |> 
+  fit(ViolentCrimesPerPop.numeric ~ medIncome.numeric+PctPopUnderPov.numeric, data = communities_clean_df) |> 
+  tidy()
+
+```
+
+```{r}
+#Type of Income Variables:
+#pctWWage,pctWFarmSelf, pctWInvInc, pctWSocSec, pctWPubAsst, pctWRetire
+
+Model_TypeIncome <- linear_reg() |> 
+  set_engine("lm") |> 
+  fit(ViolentCrimesPerPop.numeric ~ pctWWage.numeric+pctWInvInc.numeric+pctWSocSec.numeric+pctWPubAsst.numeric+pctWRetire.numeric, data = communities_clean_df) |> 
+  print()
+
+```
+
+
+```{r}
+#Occupation variables:
+#PctUnemployed,PctEmploy,PctEmplManu,PctEmplProfServ
+Model_Occupation <- linear_reg() |> 
+  set_engine("lm") |> 
+  fit(ViolentCrimesPerPop.numeric ~ PctEmploy.numeric+PctUnemployed.numeric+PctEmplManu.numeric+PctEmplProfServ.numeric, data = communities_clean_df) |> 
+  print()
+
+```
+
+```{r}
+#Education variables:
+#PctLess9thGrade,PctNotHSGrad,PctBSorMore
+Model_Econ2 <- linear_reg() |> 
+  set_engine("lm") |> 
+  fit(ViolentCrimesPerPop.numeric ~ PctLess9thGrade.numeric+PctNotHSGrad.numeric+PctBSorMore.numeric, data = communities_clean_df) |> 
+  print()
+
+Model_Econ2 <- linear_reg() |> 
+  set_engine("lm") |> 
+  fit(ViolentCrimesPerPop.numeric ~ PctLess9thGrade.numeric+PctBSorMore.numeric, data = communities_clean_df) |> 
+  print()
+
+#funky result
+
+communities_clean_df |> 
+  ggplot(
+    aes(
+      x = PctLess9thGrade.numeric,
+      y = ViolentCrimesPerPop.numeric
+    )
+  )+
+  geom_point()
+
+correlations(communities_clean_df$PctLess9thGrade.numeric,communities_clean_df$ViolentCrimesPerPop.numeric)
+```
+
+```{r}
+#Demographic Variables: - tbd
+#
+```
+
+```{r}
+#Police Informatic Variables:
+```
+
