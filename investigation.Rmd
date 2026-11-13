@@ -342,6 +342,87 @@ Model_TypeIncome <- linear_reg() |>
 
 ```
 
+```{r}
+#Type of Income Variables:
+#pctWWage,pctWFarmSelf, pctWInvInc, pctWSocSec, pctWPubAsst, pctWRetire
+
+
+
+# Data
+x <- "Violent Crime Rate"
+y <- c(
+  "Wage / Salary",
+  "Farm / Self-Employed",
+  "Investment / Rent",
+  "Social Security",
+  "Public Assistance",
+  "Retirement Income"
+)
+
+data <- expand.grid(X = x, Y = y)
+
+data$Z <- c(
+  cor(communities_clean_df$pctWWage.numeric, communities_clean_df$ViolentCrimesPerPop.numeric, use = "complete.obs"),
+  cor(communities_clean_df$pctWFarmSelf.numeric, communities_clean_df$ViolentCrimesPerPop.numeric, use = "complete.obs"),
+  cor(communities_clean_df$pctWInvInc.numeric, communities_clean_df$ViolentCrimesPerPop.numeric, use = "complete.obs"),
+  cor(communities_clean_df$pctWSocSec.numeric, communities_clean_df$ViolentCrimesPerPop.numeric, use = "complete.obs"),
+  cor(communities_clean_df$pctWPubAsst.numeric, communities_clean_df$ViolentCrimesPerPop.numeric, use = "complete.obs"),
+  cor(communities_clean_df$pctWRetire.numeric, communities_clean_df$ViolentCrimesPerPop.numeric, use = "complete.obs")
+)
+
+# Heatmap
+ggplot(data, aes(X, reorder(Y, Z), fill = Z)) +
+  geom_tile(color = "white", linewidth = 1) +
+  geom_text(aes(label = round(Z, 2)), size = 4) +
+  scale_fill_gradient2(
+    low = "steelblue",
+    mid = "white",
+    high = "coral",
+    midpoint = 0,
+    limits = c(-1, 1)
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Income Sources Correlated with Violent Crime",
+    x = "",
+    y = "",
+    fill = "Correlation (r)"
+  )
+
+
+ggplot(communities_clean_df, aes(x=pctWPubAsst.numeric, y=ViolentCrimesPerPop.numeric)) + 
+    geom_point(alpha = 0.3) + geom_smooth(method = lm,
+              se = TRUE,
+              colour = "steelblue")
+
+ggplot(communities_clean_df, aes(x=pctWSocSec.numeric, y=ViolentCrimesPerPop.numeric)) + 
+    geom_point() + geom_smooth(method = lm,
+              se = TRUE,
+              colour = "steelblue")
+
+ggplot(communities_clean_df, aes(x=pctWRetire.numeric, y=ViolentCrimesPerPop.numeric)) + 
+    geom_point() + geom_smooth(method = lm,
+              se = TRUE,
+              colour = "steelblue")
+
+ggplot(communities_clean_df, aes(x=pctWFarmSelf.numeric, y=ViolentCrimesPerPop.numeric)) + 
+    geom_point() + geom_smooth(method = lm,
+              se = TRUE,
+              colour = "steelblue")
+
+ggplot(communities_clean_df, aes(x=pctWWage.numeric, y=ViolentCrimesPerPop.numeric)) + 
+    geom_point() + geom_smooth(method = lm,
+              se = TRUE,
+              colour = "steelblue")
+
+ggplot(communities_clean_df, aes(x=pctWInvInc.numeric, y=ViolentCrimesPerPop.numeric)) + 
+    geom_point() + geom_smooth(method = lm,
+              se = TRUE,
+              colour = "steelblue")
+
+
+```
+
 
 ```{r}
 #Occupation variables:
@@ -350,6 +431,67 @@ Model_Occupation <- linear_reg() |>
   set_engine("lm") |> 
   fit(ViolentCrimesPerPop.numeric ~ PctEmploy.numeric+PctUnemployed.numeric+PctEmplManu.numeric+PctEmplProfServ.numeric, data = communities_clean_df) |> 
   print()
+
+```
+
+```{r}
+#Occupation variables:
+#PctUnemployed,PctEmploy,PctEmplManu,PctEmplProfServ
+
+# Data
+x <- "Violent Crime Rate"
+y <- c(
+  "Unemployed", "Employed", "Employed in Manufactoring", "Employed in Professional Services"
+)
+
+data <- expand.grid(X = x, Y = y)
+
+data$Z <- c(
+  cor(communities_clean_df$PctUnemployed.numeric, communities_clean_df$ViolentCrimesPerPop.numeric, use = "complete.obs"),
+  cor(communities_clean_df$PctEmploy.numeric, communities_clean_df$ViolentCrimesPerPop.numeric, use = "complete.obs"),
+  cor(communities_clean_df$PctEmplManu.numeric, communities_clean_df$ViolentCrimesPerPop.numeric, use = "complete.obs"),
+  cor(communities_clean_df$PctEmplProfServ.numeric, communities_clean_df$ViolentCrimesPerPop.numeric, use = "complete.obs")
+)
+
+# Heatmap
+ggplot(data, aes(X, reorder(Y, Z), fill = Z)) +
+  geom_tile(color = "white", linewidth = 1) +
+  geom_text(aes(label = round(Z, 2)), size = 4) +
+  scale_fill_gradient2(
+    low = "steelblue",
+    mid = "white",
+    high = "coral",
+    midpoint = 0,
+    limits = c(-1, 1)
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Employment Correlated with Violent Crime",
+    x = "",
+    y = "",
+    fill = "Correlation (r)"
+  )
+
+
+ggplot(communities_clean_df, aes(x=PctUnemployed.numeric, y=ViolentCrimesPerPop.numeric)) + 
+    geom_point(alpha = 0.3) + geom_smooth(method = lm,
+              se = TRUE,
+              colour = "steelblue")
+
+ggplot(communities_clean_df, aes(x=PctEmplManu.numeric, y=ViolentCrimesPerPop.numeric)) + 
+    geom_point() + geom_smooth(method = lm,
+              se = TRUE,
+              colour = "steelblue")
+
+ggplot(communities_clean_df, aes(x=PctEmplProfServ.numeric, y=ViolentCrimesPerPop.numeric)) + 
+    geom_point() + geom_smooth(method = lm,
+              se = TRUE,
+              colour = "steelblue")
+
+ggplot(communities_clean_df, aes(x=PctEmploy.numeric, y=ViolentCrimesPerPop.numeric)) + 
+    geom_point() + geom_smooth(method = lm,
+              se = TRUE,
+              colour = "steelblue")
 
 ```
 
@@ -378,6 +520,61 @@ communities_clean_df |>
   geom_point()
 
 correlations(communities_clean_df$PctLess9thGrade.numeric,communities_clean_df$ViolentCrimesPerPop.numeric)
+```
+
+```{r}
+#Education variables:
+#PctLess9thGrade,PctNotHSGrad,PctBSorMore
+
+# Data
+x <- "Violent Crime Rate"
+y <- c(
+  "Less than 9th Grade Education", "Not HS Graduate", "BSc or More"
+)
+
+data <- expand.grid(X = x, Y = y)
+
+data$Z <- c(
+  cor(communities_clean_df$PctLess9thGrade.numeric, communities_clean_df$ViolentCrimesPerPop.numeric, use = "complete.obs"),
+  cor(communities_clean_df$PctNotHSGrad.numeric, communities_clean_df$ViolentCrimesPerPop.numeric, use = "complete.obs"),
+  cor(communities_clean_df$PctBSorMore.numeric, communities_clean_df$ViolentCrimesPerPop.numeric, use = "complete.obs")
+)
+
+# Heatmap
+ggplot(data, aes(X, reorder(Y, Z), fill = Z)) +
+  geom_tile(color = "white", linewidth = 1) +
+  geom_text(aes(label = round(Z, 2)), size = 4) +
+  scale_fill_gradient2(
+    low = "steelblue",
+    mid = "white",
+    high = "coral",
+    midpoint = 0,
+    limits = c(-1, 1)
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Education Correlated with Violent Crime",
+    x = "",
+    y = "",
+    fill = "Correlation (r)"
+  )
+
+
+ggplot(communities_clean_df, aes(x=PctNotHSGrad.numeric, y=ViolentCrimesPerPop.numeric)) + 
+    geom_point(alpha = 0.3) + geom_smooth(method = lm,
+              se = TRUE,
+              colour = "steelblue")
+
+ggplot(communities_clean_df, aes(x=PctLess9thGrade.numeric, y=ViolentCrimesPerPop.numeric)) + 
+    geom_point() + geom_smooth(method = lm,
+              se = TRUE,
+              colour = "steelblue")
+
+ggplot(communities_clean_df, aes(x=PctBSorMore.numeric, y=ViolentCrimesPerPop.numeric)) + 
+    geom_point() + geom_smooth(method = lm,
+              se = TRUE,
+              colour = "steelblue")
+
 ```
 
 ```{r}
