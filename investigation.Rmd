@@ -19,7 +19,6 @@ library(tidyverse)
 library(readr)
 library(tidymodels)
 
-
 ```
 
 
@@ -346,22 +345,45 @@ Model_TypeIncome <- linear_reg() |>
 ```{r}
 #Occupation variables:
 #PctUnemployed,PctEmploy,PctEmplManu,PctEmplProfServ
+
 Model_Occupation <- linear_reg() |> 
   set_engine("lm") |> 
   fit(ViolentCrimesPerPop.numeric ~ PctEmploy.numeric+PctUnemployed.numeric+PctEmplManu.numeric+PctEmplProfServ.numeric, data = communities_clean_df) |> 
   print()
+
+communities_occ <- communities_clean_df |> 
+  select(ViolentCrimesPerPop.numeric,PctEmploy.numeric, PctUnemployed.numeric, PctEmplManu.numeric, PctEmplProfServ.numeric) |> 
+  pivot_longer(
+    cols = c(PctEmploy.numeric, PctUnemployed.numeric, PctEmplManu.numeric, PctEmplProfServ.numeric),
+    names_to = "Occupation",
+    values_to = "Numeric"
+  )
+
+communities_occ |> 
+  ggplot(
+    aes(x = Numeric,
+      y = ViolentCrimesPerPop.numeric)
+  )+
+  geom_density_2d_filled(bins = 15,
+                         show.legend = FALSE)+
+  geom_smooth(
+    method = "lm",
+    se = FALSE,
+    colour = "red"
+  )+
+  facet_wrap(~Occupation)
 
 ```
 
 ```{r}
 #Education variables:
 #PctLess9thGrade,PctNotHSGrad,PctBSorMore
-Model_Econ2 <- linear_reg() |> 
+Model_Edu1 <- linear_reg() |> 
   set_engine("lm") |> 
   fit(ViolentCrimesPerPop.numeric ~ PctLess9thGrade.numeric+PctNotHSGrad.numeric+PctBSorMore.numeric, data = communities_clean_df) |> 
   print()
 
-Model_Econ2 <- linear_reg() |> 
+Model_Edu2 <- linear_reg() |> 
   set_engine("lm") |> 
   fit(ViolentCrimesPerPop.numeric ~ PctLess9thGrade.numeric+PctBSorMore.numeric, data = communities_clean_df) |> 
   print()
@@ -377,7 +399,37 @@ communities_clean_df |>
   )+
   geom_point()
 
-correlations(communities_clean_df$PctLess9thGrade.numeric,communities_clean_df$ViolentCrimesPerPop.numeric)
+Model_Edu3 <- linear_reg() |> 
+  set_engine("lm") |> 
+  fit(ViolentCrimesPerPop.numeric ~ PctNotHSGrad.numeric+PctBSorMore.numeric, data = communities_clean_df) |> 
+  print()
+
+Model_Edu2
+Model_Edu3
+
+#This is some FUNKY stuff
+
+communities_edu <- communities_clean_df |> 
+  select(ViolentCrimesPerPop.numeric, PctLess9thGrade.numeric, PctNotHSGrad.numeric, PctBSorMore.numeric) |> 
+  pivot_longer(
+    cols = c(PctLess9thGrade.numeric, PctNotHSGrad.numeric, PctBSorMore.numeric),
+    values_to = "VNumeric",
+    names_to = "LevelOfEducation"
+  )
+
+communities_edu |> 
+  ggplot(
+    aes(x = VNumeric,
+      y = ViolentCrimesPerPop.numeric)
+  )+
+  geom_density_2d_filled(bins = 15,
+                         show.legend = FALSE)+
+  geom_smooth(
+    method = "lm",
+    se = FALSE,
+    colour = "red"
+  )+
+  facet_wrap(~LevelOfEducation)
 ```
 
 ```{r}
