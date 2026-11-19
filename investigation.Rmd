@@ -18,6 +18,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(readr)
 library(tidymodels)
+library(rmarkdown)
 
 ```
 
@@ -630,11 +631,7 @@ ggplot(communities_clean_df, aes(x=PctBSorMore.numeric, y=ViolentCrimesPerPop.nu
 ```
 
 ```{r}
-#Demographic Variables: - tbd
-#
-```
-
-```{r}
 #Police Informatic Variables:
+#LemasSwFTPerPop
 ```
 

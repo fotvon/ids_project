@@ -31,22 +31,65 @@ library(tidyverse)
 
 ## Research Question
 
-Is there a correlation/connection between incomes and employment with violent crimes?
-
-
+Is there a relationship between violent crimes and wealth, income, education, occupation, police operations?
 
 
 ## Data
-
 Briefly describe your dataset here - include a description of the key variables you will be investigating. 
-Include a citation for your data. 
+Include a citation for your data.
 See http://libraryguides.vu.edu.au/c.php?g=386501&p=4347840 for guidance on proper citation for datasets. 
 If you got your data off the web, make sure to state the retrieval date.
 
 
+This data set was donated in 2009, but the data itself combines information from other data like: 1990 US Census, law enforcement data from the 1990 US LEMAS survey, crime data from the 1995 FBI UCR (Michael Redmond,2009).
 
 
+In this data set, 1994 observations were recorded across 128 variables. These included variables related to demographics, socio-economics, education, police informatics, violent crimes and others (Michael Redmond,2009). The data does include missing values (Michael Redmond,2009), some of these variables recorded 84% NA values in their observations.
 
+
+"The per capita violent crimes variable was calculated using population and the sum of crime variables considered violent crimes in the United States: murder, rape, robbery, and assault. There was apparently some controversy in some states concerning the counting of rapes. These resulted in missing values for rape, which resulted in incorrect values for per capita violent crime. These cities are not included in the dataset. Many of these omitted communities were from the midwestern USA."
+
+
+All values in this data have been normalised between 0 and 1. This has maintained the distribution and skew of the data, but relationships between data has been lost.
+
+
+Key Variables:
+Goal Variable:
+  1. ViolentCrimesPerPop  - numeric [0,1]     -total number of violent crimes per 100K popuation
+
+Wealth Variables:
+  1.medIncome             - numeric [0,1]     -median household income
+  2.perCapInc             - numeric [0,1]     -per capita income
+  3.PctPopUnderPov        - numeric [0,1]     -percentage of people under the poverty level
+
+Income Variables:
+  1. pctWWage             - numeric [0,1]     -percentage of households with wage or salary income in 1989
+  2. pctWFarmSelf         - numeric [0,1]     -percentage of households with farm or self employment income in 1989
+  3. pctWInvInc           - numeric [0,1]     -percentage of households with investment / rent income in 1989
+  4. pctWSocSec           - numeric [0,1]     -percentage of households with social security income in 1989
+  5. pctWPubAsst          - numeric [0,1]     -percentage of households with public assistance income in 1989
+  6. pctWRetire           - numeric [0,1]     -percentage of households with retirement income in 1989
+
+Occupation Variables:
+  1. PctUnemployed        - numeric [0,1]     -percentage of people 16 and over, in the labor force, and unemployed
+  2. PctEmploy            - numeric [0,1]     -percentage of people 16 and over who are employed
+  3. PctEmplManu          - numeric [0,1]     -percentage of people 16 and over who are employed in manufacturing
+  4. PctEmplProfServ      - numeric [0,1]     -percentage of people 16 and over who are employed in professional services
+
+Education Variables:
+  1. PctLess9thGrade      - numeric [0,1]     -percentage of people 25 and over with less than a 9th grade education
+  2. PctNotHSGrad         - numeric [0,1]     -percentage of people 25 and over that are not high school graduates
+  3. PctBSorMore          - numeric [0,1]     -percentage of people 25 and over with a bachelors degree or higher education
+
+Police Variables:
+  1. LemasSwFTFieldPerPop - numeric [0,1]     -sworn full time police officers in field operations
+  2. LemasPctPolicOnPatr  - numeric [0,1]     -percent of sworn full time police officers on patrol
+  3. LemasGangUnitDeploy  - ordinal {0,0.5,1} -gang unit deployed (0 means NO, 1 means YES, 0.5 means Part Time)
+  4. LemasPctOfficDrugUn  - numeric [0,1]     -percent of officers assigned to drug units
+  5. PolicBudgPerPop      - numeric [0,1]     -police operating budget per population
+  6.LemasSwFTPerPop       - numeric [0,1]     -sworn full time police officers per 100K population
+
+In total, we will be examining 23 different variables from this data set.
 
 ## Findings
 
@@ -70,8 +113,24 @@ Make sure to hide your code with  `echo = FALSE` unless the point you are trying
 
 
 
+
+
+
+
+
 ## References
 
-List any references here. You should, at a minimum, list your data source.
+Source:
 
+Creator: Michael Redmond (redmond 'at' lasalle.edu); Computer Science; La Salle 
+University; Philadelphia, PA, 19141, USA
+-- culled from 1990 US Census, 1995 US FBI Uniform Crime Report, 1990 US Law 
+Enforcement Management and Administrative Statistics Survey, available from ICPSR at U 
+of Michigan.
+-- Donor: Michael Redmond (redmond 'at' lasalle.edu); Computer Science; La Salle 
+University; Philadelphia, PA, 19141, USA
+-- Date: July 2009
+
+
+Michael Redmond,(2009),Crimes and Communities[Data set].,https://doi.org/10.24432/C53W3X
 
