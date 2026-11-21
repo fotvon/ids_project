@@ -141,7 +141,44 @@ class: middle, center
 
 ## Analysing Wealth and Violent Crimes
 ...
+
+```{r Analyse wealth, echo=FALSE}
+#Smaller Data set for this Analysis
+communities_W <- communities_clean |> 
+  select(medIncome.numeric,perCapInc.numeric,PctPopUnderPov.numeric,ViolentCrimesPerPop.numeric)
+
+#Correlation Heat Map plot
+communities_W |> 
+  summarise(mutate(
+    across(!c(ViolentCrimesPerPop.numeric), ~ cor(ViolentCrimesPerPop.numeric,.))
+  )) |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Variable",
+    values_to = "Value"
+  ) |> 
+ggplot(aes(x="ViolentCrime",y=reorder(Variable,Value), fill = Value))+
+  geom_tile(color = "white", linewidth = 1) +
+  geom_text(aes(label = round(Value, 2)), size = 4) +
+  scale_fill_gradient2(
+    low = "steelblue",
+    mid = "white",
+    high = "coral",
+    midpoint = 0,
+    limits = c(-1, 1)
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Wealth Correlated with Violent Crime",
+    x = "",
+    y = "",
+    fill = "Correlation (r)"
+  )
+
+
+```
 ---
+
 class: middle, center
 # Analysing Income and Violent Crimes
 
@@ -149,6 +186,40 @@ class: middle, center
 
 ## Analysing Income and Violent Crimes
 ...
+```{r Income, echo=FALSE}
+#Smaller Data set for this Analysis
+communities_I <- communities_clean |> 
+  select(ViolentCrimesPerPop.numeric,pctWWage.numeric,pctWFarmSelf.numeric,pctWInvInc.numeric,pctWSocSec.numeric,pctWPubAsst.numeric,pctWRetire.numeric)
+
+#Correlation Values
+communities_I |> 
+  summarise(mutate(
+    across(!c(ViolentCrimesPerPop.numeric), ~ cor(ViolentCrimesPerPop.numeric,.))
+  )) |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Variable",
+    values_to = "Value"
+  ) |> 
+  ggplot(aes(x="ViolentCrime",y=reorder(Variable,Value), fill = Value))+
+  geom_tile(color = "white", linewidth = 1) +
+  geom_text(aes(label = round(Value, 2)), size = 4) +
+  scale_fill_gradient2(
+    low = "steelblue",
+    mid = "white",
+    high = "coral",
+    midpoint = 0,
+    limits = c(-1, 1)
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Income Correlated with Violent Crime",
+    x = "",
+    y = "",
+    fill = "Correlation (r)"
+  )
+```
+
 ---
 class: middle, center
 # Analysing Occupation and Violent Crimes
@@ -157,6 +228,42 @@ class: middle, center
 
 ## Analysing Occupation and Violent Crimes
 ...
+
+
+```{r Occupation, echo=FALSE}
+#Smaller Data set for this Analysis
+communities_O <- communities_clean |> 
+  select(ViolentCrimesPerPop.numeric,PctUnemployed.numeric,PctEmploy.numeric,PctEmplManu.numeric,PctEmplProfServ.numeric)
+
+#Correlation Values
+communities_O |> 
+  summarise(mutate(
+    across(!c(ViolentCrimesPerPop.numeric), ~ cor(ViolentCrimesPerPop.numeric,.))
+  )) |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Variable",
+    values_to = "Value"
+  ) |> 
+  ggplot(aes(x="ViolentCrime",y=reorder(Variable,Value), fill = Value))+
+  geom_tile(color = "white", linewidth = 1) +
+  geom_text(aes(label = round(Value, 2)), size = 4) +
+  scale_fill_gradient2(
+    low = "steelblue",
+    mid = "white",
+    high = "coral",
+    midpoint = 0,
+    limits = c(-1, 1)
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Occupation Correlated with Violent Crime",
+    x = "",
+    y = "",
+    fill = "Correlation (r)"
+  )
+```
+
 ---
 class: middle, center
 # Analysing Education and Violent Crimes
@@ -165,14 +272,86 @@ class: middle, center
 
 ## Analysing Education and Violent Crimes
 ...
+```{r Education, echo=FALSE}
+#Smaller Data set for this Analysis
+communities_E <- communities_clean |> 
+  select(ViolentCrimesPerPop.numeric,PctLess9thGrade.numeric,PctNotHSGrad.numeric,PctBSorMore.numeric)
+
+#Correlation Values
+communities_E |> 
+  summarise(mutate(
+    across(!c(ViolentCrimesPerPop.numeric), ~ cor(ViolentCrimesPerPop.numeric,.))
+  )) |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Variable",
+    values_to = "Value"
+  ) |> 
+  ggplot(aes(x="ViolentCrime",y=reorder(Variable,Value), fill = Value))+
+  geom_tile(color = "white", linewidth = 1) +
+  geom_text(aes(label = round(Value, 2)), size = 4) +
+  scale_fill_gradient2(
+    low = "steelblue",
+    mid = "white",
+    high = "coral",
+    midpoint = 0,
+    limits = c(-1, 1)
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Level of Education Correlated with Violent Crime",
+    x = "",
+    y = "",
+    fill = "Correlation (r)"
+  )
+```
+
 ---
 class: middle, center
 # Analysing Police Data and Violent Crimes
+
+
 
 ---
 
 ## Analysing Police Data and Violent Crimes
 ...
+
+```{r Police Data, echo=FALSE}
+#Smaller Data set for this Analysis
+communities_P <- communities_clean |> 
+  select(ViolentCrimesPerPop.numeric,LemasSwFTFieldPerPop.numeric,LemasPctPolicOnPatr.numeric,LemasPctOfficDrugUn.numeric,PolicBudgPerPop.numeric,LemasSwFTPerPop.numeric) |> 
+  drop_na()
+  
+#Correlation Values
+communities_P |> 
+  summarise(mutate(
+    across(!c(ViolentCrimesPerPop.numeric), ~ cor(ViolentCrimesPerPop.numeric,.))
+  )) |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Variable",
+    values_to = "Value"
+  ) |> 
+  ggplot(aes(x="ViolentCrime",y=reorder(Variable,Value), fill = Value))+
+  geom_tile(color = "white", linewidth = 1) +
+  geom_text(aes(label = round(Value, 2)), size = 4) +
+  scale_fill_gradient2(
+    low = "steelblue",
+    mid = "white",
+    high = "coral",
+    midpoint = 0,
+    limits = c(-1, 1)
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Occupation Correlated with Violent Crime",
+    x = "",
+    y = "",
+    fill = "Correlation (r)"
+  )
+```
+
 ---
 
 ## Analysing All Variables Together
