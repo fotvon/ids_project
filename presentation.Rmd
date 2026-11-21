@@ -1,8 +1,8 @@
 
 ---
-title: "Presentation title"
-subtitle: "Presentation subtitle (if any)"
-author: "Team name <br> Names of team members"
+title: "Communities and Violent Crimes"
+subtitle: "Exploring relationships between Violent Crimes and Other Variables"
+author: "IBS <br> William, Fotini, Ankita"
 institute: "University of Edinburgh"
 date: "`r Sys.Date()`"
 output:
@@ -29,11 +29,12 @@ install.packages('xaringan')
 # Add any additional packages you need to this chunk
 library(tidyverse)
 library(tidymodels)
+library(readr)
+library(rmarkdown)
 library(palmerpenguins)
 library(knitr)
 library(xaringanthemer)
-
-read.csv("data/communities.data")
+library(xaringanExtra)
 
 ```
 
@@ -44,6 +45,15 @@ knitr::opts_chunk$set(fig.retina = 3, dpi = 300, fig.width = 6, fig.asp = 0.618,
 
 ```{r load-data, include=FALSE}
 # Load your data here
+
+#Loading Data and cleaning
+communities_clean <- read.csv("data/communities_heading.data") |> 
+  mutate(across(everything() & !c(communityname.string), ~as.numeric(.)),
+         LemasGangUnitDeploy.numeric = case_when(
+           LemasGangUnitDeploy.numeric == 1 ~ "Yes",
+           LemasGangUnitDeploy.numeric == 0 ~ "No",
+           LemasGangUnitDeploy.numeric == 0.5 ~ "PrtTime"
+         ))
 
 ```
 
@@ -57,39 +67,129 @@ style_xaringan(
 
 class: center, middle
 
-## A statement of the overall goal / research question
+## Is there a relationship between violent crimes and other groups of variables?
+
+---
+class: center
+
+##Grouped Explanatory Variables
+
+<div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
+
+<div>
+<h3>Wealth</h3>
+These variables tell you how MUCH money there is:
+<br><br>
+medIncome<br>
+perCapInc<br>
+PctPopUnderPov<br>
+</div>
+
+<div>
+<h3>Income</h3>
+These variables tell you HOW money is made:
+<br><br>
+pctWWage<br>
+pctWFarmSelf<br>
+pctWInvInc<br>
+pctWSocSec<br>
+pctWPubAsst<br>
+pctWRetire<br>
+</div>
+
+<div>
+<h3>Occupation</h3>
+These variables tell you the type occupation:
+<br><br>
+PctUnemployed<br>
+PctEmploy<br>
+PctEmplManu<br>
+PctEmplProfServ<br>
+</div>
+
+<div>
+<h3>Education</h3>
+These variables tell you the level of Education:
+<br><br>
+PctLess9thGrade<br>
+PctNotHSGrad<br>
+PctBSorMore<br>
+</div>
+
+<div>
+<h3>Police Data</h3>
+These variables tell you about police information:
+<br><br>
+LemasSwFTFieldPerPop<br>
+LemasPctPolicOnPatr<br>
+LemasGangUnitDeploy<br>
+LemasPctOfficDrugUn<br>
+PolicBudgPerPop<br>
+LemasSwFTPerPop<br>
+</div>
+
+</div>
+
+
+####Response Variable : ViolentCrimesPerPop
+
+---
+class: middle, center
+# Analysing Wealth and Violent Crimes
 
 ---
 
-class: inverse, center, middle
-
-# Section title
+## Analysing Wealth and Violent Crimes
+...
+---
+class: middle, center
+# Analysing Income and Violent Crimes
 
 ---
 
-# Hello World
-
-- Click the `Knit` button to compile your presentation
-
-- Make sure to commit and push all resulting files to your GitHub repo
+## Analysing Income and Violent Crimes
+...
+---
+class: middle, center
+# Analysing Occupation and Violent Crimes
 
 ---
 
-class: inverse, middle, center
-
-# Using xaringan
+## Analysing Occupation and Violent Crimes
+...
+---
+class: middle, center
+# Analysing Education and Violent Crimes
 
 ---
 
-# xaringan
+## Analysing Education and Violent Crimes
+...
+---
+class: middle, center
+# Analysing Police Data and Violent Crimes
 
-- The presentation is created using the `xaringan` package
+---
 
-- Use `---` to separate slides and `--` for incremental builds
+## Analysing Police Data and Violent Crimes
+...
+---
 
---
+## Analysing All Variables Together
 
-- Like this
+---
+
+## Comparing Models
+
+---
+
+## Conclusion
+
+---
+
+class: middle, center
+
+#Thank You For Listening
 
 ---
 
