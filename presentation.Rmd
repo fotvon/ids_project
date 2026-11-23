@@ -7,7 +7,7 @@ institute: "University of Edinburgh"
 date: "`r Sys.Date()`"
 output:
   xaringan::moon_reader:
-    css: xaringan-themer.css
+    css: styles.css
     lib_dir: libs
     nature:
       ratio: "16:9"
@@ -24,7 +24,6 @@ output:
 install.packages('xaringan')
 ```
 
-
 ```{r load-packages, include = FALSE}
 # Add any additional packages you need to this chunk
 library(tidyverse)
@@ -35,7 +34,7 @@ library(palmerpenguins)
 library(knitr)
 library(xaringanthemer)
 library(xaringanExtra)
-
+library(quarto)
 ```
 
 ```{r setup, include=FALSE}
@@ -54,6 +53,20 @@ communities_clean <- read.csv("data/communities_heading.data") |>
            LemasGangUnitDeploy.numeric == 0 ~ "No",
            LemasGangUnitDeploy.numeric == 0.5 ~ "PrtTime"
          ))
+
+```
+
+```{r Data-split, include = FALSE }
+#Split the data into a training and testing subset
+set.seed(1234)
+communities_split <- initial_split(communities_clean, prop = 0.75)
+train <- training(communities_split)
+test <- testing(communities_split)
+
+#Define the Model
+#We are going to use a regular linear model
+communities_mod <- linear_reg() |> 
+  set_engine("lm")
 
 ```
 
@@ -134,15 +147,15 @@ LemasSwFTPerPop<br>
 ####Response Variable : ViolentCrimesPerPop
 
 ---
+
 class: middle, center
 # Analysing Wealth and Violent Crimes
 
 ---
 
-## Analysing Wealth and Violent Crimes
-...
+## Wealth Correlated With Violent Crimes
 
-```{r Analyse wealth, echo=FALSE}
+```{r Analyse wealth,out.width="80%",echo=FALSE, fig.align='center'}
 #Smaller Data set for this Analysis
 communities_W <- communities_clean |> 
   select(medIncome.numeric,perCapInc.numeric,PctPopUnderPov.numeric,ViolentCrimesPerPop.numeric)
@@ -169,13 +182,56 @@ ggplot(aes(x="ViolentCrime",y=reorder(Variable,Value), fill = Value))+
   ) +
   theme_minimal() +
   labs(
-    title = "Wealth Correlated with Violent Crime",
+    title = "Wealth & Crime Coreelation",
     x = "",
     y = "",
     fill = "Correlation (r)"
   )
 
 
+```
+]
+
+---
+
+## Modeling Violent Crimes based on Wealth
+
+```{r Model W, include=FALSE}
+
+#Select the necessary columns fomr the training and test data
+training_data <- train |>
+  select(ViolentCrimesPerPop.numeric,medIncome.numeric,perCapInc.numeric,PctPopUnderPov.numeric)
+testing_data <- test |>
+    select(ViolentCrimesPerPop.numeric,medIncome.numeric,perCapInc.numeric,PctPopUnderPov.numeric)
+
+#Make the recipe for the Models
+recipe <- recipe(ViolentCrimesPerPop.numeric ~ ., data = training_data) |> 
+  step_naomit() |> 
+  step_dummy(all_nominal(), -all_outcomes()) |> 
+  step_zv(all_predictors())
+
+#Finalise the Workflow
+communities_wflow <- workflow() |> 
+  add_model(communities_mod) |> 
+  add_recipe(recipe)
+
+#Train the Model with the Variables
+Fit <- communities_wflow |> 
+  fit(data = training_data)
+
+#Test the model
+Predict <- predict(Fit, testing_data) |> 
+  bind_cols(testing_data) |> 
+  mutate(
+    resid = .pred - ViolentCrimesPerPop.numeric
+  )
+
+#Store some data for later comparison
+StatTable_W <- tibble(Model = c("Model Wealth"),
+                   RSqrd = round(c(glance(Fit)$r.squared), digits = 2),
+                   AdjRSqrd = round(c(glance(Fit)$adj.r.squared), digits = 2),
+                   RMSE = rmse(Predict, truth = ViolentCrimesPerPop.numeric, .pred),
+                   NumOfPred = c(nrow(summary(recipe))-1))
 ```
 ---
 
@@ -185,8 +241,8 @@ class: middle, center
 ---
 
 ## Analysing Income and Violent Crimes
-...
-```{r Income, echo=FALSE}
+
+```{r Income, echo=FALSE, fig.align='center'}
 #Smaller Data set for this Analysis
 communities_I <- communities_clean |> 
   select(ViolentCrimesPerPop.numeric,pctWWage.numeric,pctWFarmSelf.numeric,pctWInvInc.numeric,pctWSocSec.numeric,pctWPubAsst.numeric,pctWRetire.numeric)
@@ -220,6 +276,44 @@ communities_I |>
   )
 ```
 
+```{r Model I, include=FALSE}
+
+#Select the necessary columns fomr the training and test data
+training_data <- train |>
+  select(ViolentCrimesPerPop.numeric,pctWWage.numeric,pctWFarmSelf.numeric,pctWInvInc.numeric,pctWSocSec.numeric,pctWPubAsst.numeric,pctWRetire.numeric)
+testing_data <- test |>
+    select(ViolentCrimesPerPop.numeric,pctWWage.numeric,pctWFarmSelf.numeric,pctWInvInc.numeric,pctWSocSec.numeric,pctWPubAsst.numeric,pctWRetire.numeric)
+
+#Make the recipe for the Models
+recipe <- recipe(ViolentCrimesPerPop.numeric ~ ., data = training_data) |> 
+  step_naomit() |> 
+  step_dummy(all_nominal(), -all_outcomes()) |> 
+  step_zv(all_predictors())
+
+#Finalise the Workflow
+communities_wflow <- workflow() |> 
+  add_model(communities_mod) |> 
+  add_recipe(recipe)
+
+#Train the Model with the Variables
+Fit <- communities_wflow |> 
+  fit(data = training_data)
+
+#Test the model
+Predict <- predict(Fit, testing_data) |> 
+  bind_cols(testing_data) |> 
+  mutate(
+    resid = .pred - ViolentCrimesPerPop.numeric
+  )
+
+#Store some data for later comparison
+StatTable_I <- tibble(Model = c("Model Income"),
+                   RSqrd = round(c(glance(Fit)$r.squared), digits = 2),
+                   AdjRSqrd = round(c(glance(Fit)$adj.r.squared), digits = 2),
+                   RMSE = rmse(Predict, truth = ViolentCrimesPerPop.numeric, .pred),
+                   NumOfPred = c(nrow(summary(recipe))-1))
+```
+
 ---
 class: middle, center
 # Analysing Occupation and Violent Crimes
@@ -227,10 +321,8 @@ class: middle, center
 ---
 
 ## Analysing Occupation and Violent Crimes
-...
 
-
-```{r Occupation, echo=FALSE}
+```{r Occupation, echo=FALSE, fig.align='center'}
 #Smaller Data set for this Analysis
 communities_O <- communities_clean |> 
   select(ViolentCrimesPerPop.numeric,PctUnemployed.numeric,PctEmploy.numeric,PctEmplManu.numeric,PctEmplProfServ.numeric)
@@ -264,6 +356,44 @@ communities_O |>
   )
 ```
 
+```{r Model O, include=FALSE}
+
+#Select the necessary columns fomr the training and test data
+training_data <- train |>
+select(ViolentCrimesPerPop.numeric,PctUnemployed.numeric,PctEmploy.numeric,PctEmplManu.numeric,PctEmplProfServ.numeric)
+testing_data <- test |>
+select(ViolentCrimesPerPop.numeric,PctUnemployed.numeric,PctEmploy.numeric,PctEmplManu.numeric,PctEmplProfServ.numeric)
+
+#Make the recipe for the Models
+recipe <- recipe(ViolentCrimesPerPop.numeric ~ ., data = training_data) |> 
+  step_naomit() |> 
+  step_dummy(all_nominal(), -all_outcomes()) |> 
+  step_zv(all_predictors())
+
+#Finalise the Workflow
+communities_wflow <- workflow() |> 
+  add_model(communities_mod) |> 
+  add_recipe(recipe)
+
+#Train the Model with the Variables
+Fit <- communities_wflow |> 
+  fit(data = training_data)
+
+#Test the model
+Predict <- predict(Fit, testing_data) |> 
+  bind_cols(testing_data) |> 
+  mutate(
+    resid = .pred - ViolentCrimesPerPop.numeric
+  )
+
+#Store some data for later comparison
+StatTable_O <- tibble(Model = c("Model Occupation"),
+                   RSqrd = round(c(glance(Fit)$r.squared), digits = 2),
+                   AdjRSqrd = round(c(glance(Fit)$adj.r.squared), digits = 2),
+                   RMSE = rmse(Predict, truth = ViolentCrimesPerPop.numeric, .pred),
+                   NumOfPred = c(nrow(summary(recipe))-1))
+```
+
 ---
 class: middle, center
 # Analysing Education and Violent Crimes
@@ -271,8 +401,8 @@ class: middle, center
 ---
 
 ## Analysing Education and Violent Crimes
-...
-```{r Education, echo=FALSE}
+
+```{r Education, echo=FALSE, fig.align='center'}
 #Smaller Data set for this Analysis
 communities_E <- communities_clean |> 
   select(ViolentCrimesPerPop.numeric,PctLess9thGrade.numeric,PctNotHSGrad.numeric,PctBSorMore.numeric)
@@ -306,6 +436,44 @@ communities_E |>
   )
 ```
 
+```{r Model E, include=FALSE}
+
+#Select the necessary columns fomr the training and test data
+training_data <- train |>
+  select(ViolentCrimesPerPop.numeric,PctLess9thGrade.numeric,PctNotHSGrad.numeric,PctBSorMore.numeric)
+testing_data <- test |>
+  select(ViolentCrimesPerPop.numeric,PctLess9thGrade.numeric,PctNotHSGrad.numeric,PctBSorMore.numeric)
+
+#Make the recipe for the Models
+recipe <- recipe(ViolentCrimesPerPop.numeric ~ ., data = training_data) |> 
+  step_naomit() |> 
+  step_dummy(all_nominal(), -all_outcomes()) |> 
+  step_zv(all_predictors())
+
+#Finalise the Workflow
+communities_wflow <- workflow() |> 
+  add_model(communities_mod) |> 
+  add_recipe(recipe)
+
+#Train the Model with the Variables
+Fit <- communities_wflow |> 
+  fit(data = training_data)
+
+#Test the model
+Predict <- predict(Fit, testing_data) |> 
+  bind_cols(testing_data) |> 
+  mutate(
+    resid = .pred - ViolentCrimesPerPop.numeric
+  )
+
+#Store some data for later comparison
+StatTable_E <- tibble(Model = c("Model Education"),
+                   RSqrd = round(c(glance(Fit)$r.squared), digits = 2),
+                   AdjRSqrd = round(c(glance(Fit)$adj.r.squared), digits = 2),
+                   RMSE = rmse(Predict, truth = ViolentCrimesPerPop.numeric, .pred),
+                   NumOfPred = c(nrow(summary(recipe))-1))
+```
+
 ---
 class: middle, center
 # Analysing Police Data and Violent Crimes
@@ -317,7 +485,7 @@ class: middle, center
 ## Analysing Police Data and Violent Crimes
 ...
 
-```{r Police Data, echo=FALSE}
+```{r Police Data, echo=FALSE, fig.align='center'}
 #Smaller Data set for this Analysis
 communities_P <- communities_clean |> 
   select(ViolentCrimesPerPop.numeric,LemasSwFTFieldPerPop.numeric,LemasPctPolicOnPatr.numeric,LemasPctOfficDrugUn.numeric,PolicBudgPerPop.numeric,LemasSwFTPerPop.numeric) |> 
@@ -350,6 +518,47 @@ communities_P |>
     y = "",
     fill = "Correlation (r)"
   )
+
+```
+
+```{r Model P, include=FALSE}
+
+#Select the necessary columns fomr the training and test data
+training_data <- train |>
+select(ViolentCrimesPerPop.numeric,LemasSwFTFieldPerPop.numeric,LemasPctPolicOnPatr.numeric,LemasPctOfficDrugUn.numeric,PolicBudgPerPop.numeric,LemasSwFTPerPop.numeric,LemasGangUnitDeploy.numeric) |> 
+  drop_na()
+testing_data <- test |>
+select(ViolentCrimesPerPop.numeric,LemasSwFTFieldPerPop.numeric,LemasPctPolicOnPatr.numeric,LemasPctOfficDrugUn.numeric,PolicBudgPerPop.numeric,LemasSwFTPerPop.numeric,LemasGangUnitDeploy.numeric) |> 
+  drop_na()
+
+#Make the recipe for the Models
+recipe <- recipe(ViolentCrimesPerPop.numeric ~ ., data = training_data) |> 
+  step_naomit() |> 
+  step_dummy(all_nominal(), -all_outcomes()) |> 
+  step_zv(all_predictors())
+
+#Finalise the Workflow
+communities_wflow <- workflow() |> 
+  add_model(communities_mod) |> 
+  add_recipe(recipe)
+
+#Train the Model with the Variables
+Fit <- communities_wflow |> 
+  fit(data = training_data)
+
+#Test the model
+Predict <- predict(Fit, testing_data) |> 
+  bind_cols(testing_data) |> 
+  mutate(
+    resid = .pred - ViolentCrimesPerPop.numeric
+  )
+
+#Store some data for later comparison
+StatTable_P <- tibble(Model = c("Model Police"),
+                   RSqrd = round(c(glance(Fit)$r.squared), digits = 2),
+                   AdjRSqrd = round(c(glance(Fit)$adj.r.squared), digits = 2),
+                   RMSE = rmse(Predict, truth = ViolentCrimesPerPop.numeric, .pred),
+                   NumOfPred = c(nrow(summary(recipe))-1))
 ```
 
 ---
@@ -359,6 +568,16 @@ communities_P |>
 ---
 
 ## Comparing Models
+
+```{r}
+
+StatTable_ALL <- full_join(StatTable_W,StatTable_E) |> 
+  full_join(StatTable_I) |> 
+  full_join(StatTable_O) |> 
+  full_join(StatTable_P)
+
+```
+
 
 ---
 
