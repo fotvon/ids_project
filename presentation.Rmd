@@ -68,6 +68,8 @@ test <- testing(communities_split)
 communities_mod <- linear_reg() |> 
   set_engine("lm")
 
+#Variable List
+Variables <- c("ViolentCrimesPerPop.numeric","medIncome.numeric","perCapInc.numeric","PctPopUnderPov.numeric","pctWWage.numeric","pctWFarmSelf.numeric","pctWInvInc.numeric","pctWSocSec.numeric","pctWPubAsst.numeric","pctWRetire.numeric","PctUnemployed.numeric","PctEmploy.numeric","PctEmplManu.numeric","PctEmplProfServ.numeric","PctLess9thGrade.numeric","PctNotHSGrad.numeric","PctBSorMore.numeric","LemasSwFTFieldPerPop.numeric","LemasPctPolicOnPatr.numeric","LemasPctOfficDrugUn.numeric","PolicBudgPerPop.numeric","LemasSwFTPerPop.numeric","LemasGangUnitDeploy.numeric")
 ```
 
 ```{r include=FALSE}
@@ -234,10 +236,19 @@ RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
 #Test the model
 Predict <- predict(Fit, testing_data) |> 
-  bind_cols(testing_data) |> 
+  bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
   mutate(
-    resid = .pred - ViolentCrimesPerPop.numeric
+    resid = ViolentCrimesPerPop.numeric - .pred
   )
+
+#Look at residuals vs predicted value
+Predict |> 
+ggplot(
+  aes(x = .pred,
+      y = resid,
+      colour = ViolentCrimesPerPop.numeric)
+)+
+  geom_point()
 
 #Store some data for later comparison
 StatTable_W <- tibble(Model = c("Model Wealth"),
@@ -331,10 +342,19 @@ RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
 #Test the model
 Predict <- predict(Fit, testing_data) |> 
-  bind_cols(testing_data) |> 
+  bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
   mutate(
-    resid = .pred - ViolentCrimesPerPop.numeric
+    resid = ViolentCrimesPerPop.numeric - .pred
   )
+
+#Look at residuals vs predicted value
+Predict |> 
+ggplot(
+  aes(x = .pred,
+      y = resid,
+      colour = ViolentCrimesPerPop.numeric)
+)+
+  geom_point()
 
 #Store some data for later comparison
 StatTable_I <- tibble(Model = c("Model Income"),
@@ -427,10 +447,19 @@ RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
 #Test the model
 Predict <- predict(Fit, testing_data) |> 
-  bind_cols(testing_data) |> 
+  bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
   mutate(
-    resid = .pred - ViolentCrimesPerPop.numeric
+    resid = ViolentCrimesPerPop.numeric - .pred
   )
+
+#Look at residuals vs predicted value
+Predict |> 
+ggplot(
+  aes(x = .pred,
+      y = resid,
+      colour = ViolentCrimesPerPop.numeric)
+)+
+  geom_point()
 
 #Store some data for later comparison
 StatTable_O <- tibble(Model = c("Model Occupation"),
@@ -521,10 +550,19 @@ RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
 #Test the model
 Predict <- predict(Fit, testing_data) |> 
-  bind_cols(testing_data) |> 
+  bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
   mutate(
-    resid = .pred - ViolentCrimesPerPop.numeric
+    resid = ViolentCrimesPerPop.numeric - .pred
   )
+
+#Look at residuals vs predicted value
+Predict |> 
+ggplot(
+  aes(x = .pred,
+      y = resid,
+      colour = ViolentCrimesPerPop.numeric)
+)+
+  geom_point()
 
 #Store some data for later comparison
 StatTable_E <- tibble(Model = c("Model Education"),
@@ -538,8 +576,6 @@ StatTable_E <- tibble(Model = c("Model Education"),
 ---
 class: middle, center
 # Analysing Police Data and Violent Crimes
-
-
 
 ---
 
@@ -622,10 +658,19 @@ RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
 #Test the model
 Predict <- predict(Fit, testing_data) |> 
-  bind_cols(testing_data) |> 
+  bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
   mutate(
-    resid = .pred - ViolentCrimesPerPop.numeric
+    resid = ViolentCrimesPerPop.numeric - .pred
   )
+
+#Look at residuals vs predicted value
+Predict |> 
+ggplot(
+  aes(x = .pred,
+      y = resid,
+      colour = ViolentCrimesPerPop.numeric)
+)+
+  geom_point()
 
 #Store some data for later comparison
 StatTable_P <- tibble(Model = c("Model Police"),
@@ -644,18 +689,10 @@ StatTable_P <- tibble(Model = c("Model Police"),
 
 #Select the necessary columns for the training and test data
 training_data <- train |>
-select(ViolentCrimesPerPop.numeric,medIncome.numeric,perCapInc.numeric,PctPopUnderPov.numeric,
-       pctWWage.numeric,pctWFarmSelf.numeric,pctWInvInc.numeric,pctWSocSec.numeric,pctWPubAsst.numeric,pctWRetire.numeric,
-       PctUnemployed.numeric,PctEmploy.numeric,PctEmplManu.numeric,PctEmplProfServ.numeric,
-       PctLess9thGrade.numeric,PctNotHSGrad.numeric,PctBSorMore.numeric,
-       LemasSwFTFieldPerPop.numeric,LemasPctPolicOnPatr.numeric,LemasPctOfficDrugUn.numeric,PolicBudgPerPop.numeric,LemasSwFTPerPop.numeric,LemasGangUnitDeploy.numeric) |> 
+select(Variables) |> 
   drop_na()
 testing_data <- test |>
-select(ViolentCrimesPerPop.numeric,medIncome.numeric,perCapInc.numeric,PctPopUnderPov.numeric,
-       pctWWage.numeric,pctWFarmSelf.numeric,pctWInvInc.numeric,pctWSocSec.numeric,pctWPubAsst.numeric,pctWRetire.numeric,
-       PctUnemployed.numeric,PctEmploy.numeric,PctEmplManu.numeric,PctEmplProfServ.numeric,
-       PctLess9thGrade.numeric,PctNotHSGrad.numeric,PctBSorMore.numeric,
-       LemasSwFTFieldPerPop.numeric,LemasPctPolicOnPatr.numeric,LemasPctOfficDrugUn.numeric,PolicBudgPerPop.numeric,LemasSwFTPerPop.numeric,LemasGangUnitDeploy.numeric) |> 
+select(Variables) |> 
   drop_na()
 
 folds <- vfold_cv(training_data, v = 10)
@@ -688,10 +725,19 @@ RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
 #Test the model
 Predict <- predict(Fit, testing_data) |> 
-  bind_cols(testing_data) |> 
+  bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
   mutate(
-    resid = .pred - ViolentCrimesPerPop.numeric
+    resid = ViolentCrimesPerPop.numeric - .pred
   )
+
+#Look at residuals vs predicted value
+Predict |> 
+ggplot(
+  aes(x = .pred,
+      y = resid,
+      colour = ViolentCrimesPerPop.numeric)
+)+
+  geom_point()
 
 #Store some data for later comparison
 StatTable_A <- tibble(Model = c("Model All"),
@@ -702,11 +748,118 @@ StatTable_A <- tibble(Model = c("Model All"),
                    NumOfPred = c(nrow(summary(recipe))-1))
 ```
 
-```{r Model All Forward-Analysis, include=FALSE}
+```{r Model All Backward-Analysis, include=FALSE}
+training_data <- train |>
+select(Variables) |> 
+  drop_na()
+testing_data <- test |>
+select(Variables) |> 
+  drop_na()
+
+#Make the recipe for the Models
+recipe <- recipe(ViolentCrimesPerPop.numeric ~ ., data = training_data) |> 
+  step_naomit() |> 
+  step_dummy(all_nominal(), -all_outcomes()) |> 
+  step_zv(all_predictors())
+
+folds <- vfold_cv(training_data, v = 5)
+
+#Variables for the Repeat function
+vars <- Variables[!Variables %in% c("ViolentCrimesPerPop.numeric")]
+dropped <- character(0)
+best <- cv_rmse(dropped)
+history <- tibble()
+
+repeat {
+  remaining <- setdiff(vars, added)
+  if (length(remaining) == 0) break
+  scores <- map_dbl(remaining, ~ cv_rmse(setdiff(vars, c(added, .x))))
+  history <- bind_rows(history,
+    tibble(round = length(added) + 1, add = remaining, cv_rmse = scores))
+  if (min(scores) >= best) break
+  added <- c(added, remaining[which.min(scores)])
+  best  <- min(scores)
+}
+
+print(best)
+print(remaining)
 
 ```
 
-```{r Model All Backward-Analysis, include=FALSE}
+```{r Model All Forward-Analysis, include=FALSE}
+#Select the Variables
+training_data <- train |>
+select(Variables) |> 
+  drop_na()
+testing_data <- test |>
+select(Variables) |> 
+  drop_na()
+
+#Make the recipe for the Models
+recipe <- recipe(ViolentCrimesPerPop.numeric ~ ., data = training_data) |> 
+  step_naomit() |> 
+  step_dummy(all_nominal(), -all_outcomes()) |> 
+  step_zv(all_predictors())
+
+folds <- vfold_cv(training_data, v = 5)
+
+#Make the Variables for the repeat function
+
+vars <- Variables[!Variables %in% c("ViolentCrimesPerPop.numeric")]
+added <- character(0)
+best <- Inf
+history <- tibble()
+
+#Create the drop CV_RMSE function
+cv_rmse <- function(drop){
+  workflow() |> 
+    add_model(communities_mod) |> 
+    add_recipe(recipe |> step_rm(starts_with(drop))) |> 
+    fit_resamples(folds) |> 
+    collect_metrics() |> 
+    filter(.metric == "rmse") |> 
+    pull(mean)
+}
+
+#Create the repeat function
+repeat{
+  remaining <- setdiff(vars, added)
+  if (length(remaining) == 0) break
+  scores <- map_dbl(remaining, ~cv_rmse(setdiff(vars, c(added, .x))))
+  history <- bind_rows(history,
+                       tibble( round = length(added) + 1, add = remaining, cv_rmse =scores))
+  if(min(scores) >= best) break
+  added <- c(added, remaining[which.min(scores)])
+  best <- min(scores)
+}
+
+print(best)
+print(remaining)
+print(added)
+
+#Use the 'remain' vector to create the new linear model
+Fit <- workflow() |> 
+  add_model(communities_mod) |> 
+  add_recipe(recipe |> step_rm(starts_with(remaining))) |> 
+  fit(training_data)
+
+Equation <- tidy(Fit)
+
+#Test the model on the testing data
+Predict <- predict(Fit, testing_data) |> 
+  bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
+  mutate(
+    resid = ViolentCrimesPerPop.numeric - .pred
+  )
+
+#Look at residuals vs predicted value
+Predict |> 
+ggplot(
+  aes(x = .pred,
+      y = resid,
+      colour = ViolentCrimesPerPop.numeric)
+)+
+  geom_point()
 
 ```
 
@@ -739,6 +892,13 @@ class: middle, center
 
 ---
 
+
+
+
+
+
+
+ 
 # Layouts
 
 You can use plain text
