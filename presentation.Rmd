@@ -204,6 +204,8 @@ training_data <- train |>
 testing_data <- test |>
     select(ViolentCrimesPerPop.numeric,medIncome.numeric,perCapInc.numeric,PctPopUnderPov.numeric)
 
+folds <- vfold_cv(training_data, v = 10)
+
 #Make the recipe for the Models
 recipe <- recipe(ViolentCrimesPerPop.numeric ~ ., data = training_data) |> 
   step_naomit() |> 
@@ -217,7 +219,18 @@ communities_wflow <- workflow() |>
 
 #Train the Model with the Variables
 Fit <- communities_wflow |> 
-  fit(data = training_data)
+  fit(training_data)
+
+RMSE_RSQ <- communities_wflow |> 
+  fit_resamples(folds) |> 
+  collect_metrics(summarize = FALSE) |> 
+  select(id,.estimate,.metric) |> 
+  pivot_wider(
+    names_from = .metric,
+    values_from = .estimate
+  )
+
+RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
 #Test the model
 Predict <- predict(Fit, testing_data) |> 
@@ -228,10 +241,14 @@ Predict <- predict(Fit, testing_data) |>
 
 #Store some data for later comparison
 StatTable_W <- tibble(Model = c("Model Wealth"),
-                   RSqrd = round(c(glance(Fit)$r.squared), digits = 2),
-                   AdjRSqrd = round(c(glance(Fit)$adj.r.squared), digits = 2),
-                   RMSE = rmse(Predict, truth = ViolentCrimesPerPop.numeric, .pred),
+                   CV_RSqrd_Train = round(mean(RMSE_RSQ$rsq), digits = 3),
+                   RSqrd_Test = round(RSqrd_Test$.estimate, digits = 3),
+                   AdjRSqrd_Train = round(c(glance(Fit)$adj.r.squared), digits = 3),
+                   CV_RMSE = mean(RMSE_RSQ$rmse),
                    NumOfPred = c(nrow(summary(recipe))-1))
+
+
+
 ```
 ---
 
@@ -284,6 +301,8 @@ training_data <- train |>
 testing_data <- test |>
     select(ViolentCrimesPerPop.numeric,pctWWage.numeric,pctWFarmSelf.numeric,pctWInvInc.numeric,pctWSocSec.numeric,pctWPubAsst.numeric,pctWRetire.numeric)
 
+folds <- vfold_cv(training_data, v = 10)
+
 #Make the recipe for the Models
 recipe <- recipe(ViolentCrimesPerPop.numeric ~ ., data = training_data) |> 
   step_naomit() |> 
@@ -299,6 +318,17 @@ communities_wflow <- workflow() |>
 Fit <- communities_wflow |> 
   fit(data = training_data)
 
+RMSE_RSQ <- communities_wflow |> 
+  fit_resamples(folds) |> 
+  collect_metrics(summarize = FALSE) |> 
+  select(id,.estimate,.metric) |> 
+  pivot_wider(
+    names_from = .metric,
+    values_from = .estimate
+  )
+
+RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
+
 #Test the model
 Predict <- predict(Fit, testing_data) |> 
   bind_cols(testing_data) |> 
@@ -308,9 +338,10 @@ Predict <- predict(Fit, testing_data) |>
 
 #Store some data for later comparison
 StatTable_I <- tibble(Model = c("Model Income"),
-                   RSqrd = round(c(glance(Fit)$r.squared), digits = 2),
-                   AdjRSqrd = round(c(glance(Fit)$adj.r.squared), digits = 2),
-                   RMSE = rmse(Predict, truth = ViolentCrimesPerPop.numeric, .pred),
+                   CV_RSqrd_Train = round(mean(RMSE_RSQ$rsq), digits = 3),
+                   RSqrd_Test = round(RSqrd_Test$.estimate, digits = 3),
+                   AdjRSqrd_Train = round(c(glance(Fit)$adj.r.squared), digits = 3),
+                   CV_RMSE = mean(RMSE_RSQ$rmse),
                    NumOfPred = c(nrow(summary(recipe))-1))
 ```
 
@@ -360,9 +391,13 @@ communities_O |>
 
 #Select the necessary columns fomr the training and test data
 training_data <- train |>
-select(ViolentCrimesPerPop.numeric,PctUnemployed.numeric,PctEmploy.numeric,PctEmplManu.numeric,PctEmplProfServ.numeric)
+select(ViolentCrimesPerPop.numeric,PctUnemployed.numeric,PctEmploy.numeric,PctEmplManu.numeric,PctEmplProfServ.numeric) |> 
+  drop_na()
 testing_data <- test |>
-select(ViolentCrimesPerPop.numeric,PctUnemployed.numeric,PctEmploy.numeric,PctEmplManu.numeric,PctEmplProfServ.numeric)
+select(ViolentCrimesPerPop.numeric,PctUnemployed.numeric,PctEmploy.numeric,PctEmplManu.numeric,PctEmplProfServ.numeric)|> 
+  drop_na()
+
+folds <- vfold_cv(training_data, v = 10)
 
 #Make the recipe for the Models
 recipe <- recipe(ViolentCrimesPerPop.numeric ~ ., data = training_data) |> 
@@ -379,6 +414,17 @@ communities_wflow <- workflow() |>
 Fit <- communities_wflow |> 
   fit(data = training_data)
 
+RMSE_RSQ <- communities_wflow |> 
+  fit_resamples(folds) |> 
+  collect_metrics(summarize = FALSE) |> 
+  select(id,.estimate,.metric) |> 
+  pivot_wider(
+    names_from = .metric,
+    values_from = .estimate
+  )
+
+RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
+
 #Test the model
 Predict <- predict(Fit, testing_data) |> 
   bind_cols(testing_data) |> 
@@ -388,9 +434,10 @@ Predict <- predict(Fit, testing_data) |>
 
 #Store some data for later comparison
 StatTable_O <- tibble(Model = c("Model Occupation"),
-                   RSqrd = round(c(glance(Fit)$r.squared), digits = 2),
-                   AdjRSqrd = round(c(glance(Fit)$adj.r.squared), digits = 2),
-                   RMSE = rmse(Predict, truth = ViolentCrimesPerPop.numeric, .pred),
+                   CV_RSqrd_Train = round(mean(RMSE_RSQ$rsq), digits = 3),
+                   RSqrd_Test = round(RSqrd_Test$.estimate, digits = 3),
+                   AdjRSqrd_Train = round(c(glance(Fit)$adj.r.squared), digits = 3),
+                   CV_RMSE = mean(RMSE_RSQ$rmse),
                    NumOfPred = c(nrow(summary(recipe))-1))
 ```
 
@@ -444,6 +491,8 @@ training_data <- train |>
 testing_data <- test |>
   select(ViolentCrimesPerPop.numeric,PctLess9thGrade.numeric,PctNotHSGrad.numeric,PctBSorMore.numeric)
 
+folds <- vfold_cv(training_data, v = 10)
+
 #Make the recipe for the Models
 recipe <- recipe(ViolentCrimesPerPop.numeric ~ ., data = training_data) |> 
   step_naomit() |> 
@@ -459,6 +508,17 @@ communities_wflow <- workflow() |>
 Fit <- communities_wflow |> 
   fit(data = training_data)
 
+RMSE_RSQ <- communities_wflow |> 
+  fit_resamples(folds) |> 
+  collect_metrics(summarize = FALSE) |> 
+  select(id,.estimate,.metric) |> 
+  pivot_wider(
+    names_from = .metric,
+    values_from = .estimate
+  )
+
+RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
+
 #Test the model
 Predict <- predict(Fit, testing_data) |> 
   bind_cols(testing_data) |> 
@@ -468,9 +528,10 @@ Predict <- predict(Fit, testing_data) |>
 
 #Store some data for later comparison
 StatTable_E <- tibble(Model = c("Model Education"),
-                   RSqrd = round(c(glance(Fit)$r.squared), digits = 2),
-                   AdjRSqrd = round(c(glance(Fit)$adj.r.squared), digits = 2),
-                   RMSE = rmse(Predict, truth = ViolentCrimesPerPop.numeric, .pred),
+                   CV_RSqrd_Train = round(mean(RMSE_RSQ$rsq), digits = 3),
+                   RSqrd_Test = round(RSqrd_Test$.estimate, digits = 3),
+                   AdjRSqrd_Train = round(c(glance(Fit)$adj.r.squared), digits = 3),
+                   CV_RMSE = mean(RMSE_RSQ$rmse),
                    NumOfPred = c(nrow(summary(recipe))-1))
 ```
 
@@ -531,6 +592,8 @@ testing_data <- test |>
 select(ViolentCrimesPerPop.numeric,LemasSwFTFieldPerPop.numeric,LemasPctPolicOnPatr.numeric,LemasPctOfficDrugUn.numeric,PolicBudgPerPop.numeric,LemasSwFTPerPop.numeric,LemasGangUnitDeploy.numeric) |> 
   drop_na()
 
+folds <- vfold_cv(training_data, v = 10)
+
 #Make the recipe for the Models
 recipe <- recipe(ViolentCrimesPerPop.numeric ~ ., data = training_data) |> 
   step_naomit() |> 
@@ -546,6 +609,17 @@ communities_wflow <- workflow() |>
 Fit <- communities_wflow |> 
   fit(data = training_data)
 
+RMSE_RSQ <- communities_wflow |> 
+  fit_resamples(folds) |> 
+  collect_metrics(summarize = FALSE) |> 
+  select(id,.estimate,.metric) |> 
+  pivot_wider(
+    names_from = .metric,
+    values_from = .estimate
+  )
+
+RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
+
 #Test the model
 Predict <- predict(Fit, testing_data) |> 
   bind_cols(testing_data) |> 
@@ -555,9 +629,10 @@ Predict <- predict(Fit, testing_data) |>
 
 #Store some data for later comparison
 StatTable_P <- tibble(Model = c("Model Police"),
-                   RSqrd = round(c(glance(Fit)$r.squared), digits = 2),
-                   AdjRSqrd = round(c(glance(Fit)$adj.r.squared), digits = 2),
-                   RMSE = rmse(Predict, truth = ViolentCrimesPerPop.numeric, .pred),
+                   CV_RSqrd_Train = round(mean(RMSE_RSQ$rsq), digits = 3),
+                   RSqrd_Test = round(RSqrd_Test$.estimate, digits = 3),
+                   AdjRSqrd_Train = round(c(glance(Fit)$adj.r.squared), digits = 3),
+                   CV_RMSE = mean(RMSE_RSQ$rmse),
                    NumOfPred = c(nrow(summary(recipe))-1))
 ```
 
@@ -565,16 +640,89 @@ StatTable_P <- tibble(Model = c("Model Police"),
 
 ## Analysing All Variables Together
 
+```{r Model All, include=FALSE}
+
+#Select the necessary columns for the training and test data
+training_data <- train |>
+select(ViolentCrimesPerPop.numeric,medIncome.numeric,perCapInc.numeric,PctPopUnderPov.numeric,
+       pctWWage.numeric,pctWFarmSelf.numeric,pctWInvInc.numeric,pctWSocSec.numeric,pctWPubAsst.numeric,pctWRetire.numeric,
+       PctUnemployed.numeric,PctEmploy.numeric,PctEmplManu.numeric,PctEmplProfServ.numeric,
+       PctLess9thGrade.numeric,PctNotHSGrad.numeric,PctBSorMore.numeric,
+       LemasSwFTFieldPerPop.numeric,LemasPctPolicOnPatr.numeric,LemasPctOfficDrugUn.numeric,PolicBudgPerPop.numeric,LemasSwFTPerPop.numeric,LemasGangUnitDeploy.numeric) |> 
+  drop_na()
+testing_data <- test |>
+select(ViolentCrimesPerPop.numeric,medIncome.numeric,perCapInc.numeric,PctPopUnderPov.numeric,
+       pctWWage.numeric,pctWFarmSelf.numeric,pctWInvInc.numeric,pctWSocSec.numeric,pctWPubAsst.numeric,pctWRetire.numeric,
+       PctUnemployed.numeric,PctEmploy.numeric,PctEmplManu.numeric,PctEmplProfServ.numeric,
+       PctLess9thGrade.numeric,PctNotHSGrad.numeric,PctBSorMore.numeric,
+       LemasSwFTFieldPerPop.numeric,LemasPctPolicOnPatr.numeric,LemasPctOfficDrugUn.numeric,PolicBudgPerPop.numeric,LemasSwFTPerPop.numeric,LemasGangUnitDeploy.numeric) |> 
+  drop_na()
+
+folds <- vfold_cv(training_data, v = 10)
+
+#Make the recipe for the Models
+recipe <- recipe(ViolentCrimesPerPop.numeric ~ ., data = training_data) |> 
+  step_naomit() |> 
+  step_dummy(all_nominal(), -all_outcomes()) |> 
+  step_zv(all_predictors())
+
+#Finalise the Workflow
+communities_wflow <- workflow() |> 
+  add_model(communities_mod) |> 
+  add_recipe(recipe)
+
+#Train the Model with the Variables
+Fit <- communities_wflow |> 
+  fit(data = training_data)
+
+RMSE_RSQ <- communities_wflow |> 
+  fit_resamples(folds) |> 
+  collect_metrics(summarize = FALSE) |> 
+  select(id,.estimate,.metric) |> 
+  pivot_wider(
+    names_from = .metric,
+    values_from = .estimate
+  )
+
+RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
+
+#Test the model
+Predict <- predict(Fit, testing_data) |> 
+  bind_cols(testing_data) |> 
+  mutate(
+    resid = .pred - ViolentCrimesPerPop.numeric
+  )
+
+#Store some data for later comparison
+StatTable_A <- tibble(Model = c("Model All"),
+                   CV_RSqrd_Train = round(mean(RMSE_RSQ$rsq), digits = 3),
+                   RSqrd_Test = round(RSqrd_Test$.estimate, digits = 3),
+                   AdjRSqrd_Train = round(c(glance(Fit)$adj.r.squared), digits = 3),
+                   CV_RMSE = mean(RMSE_RSQ$rmse),
+                   NumOfPred = c(nrow(summary(recipe))-1))
+```
+
+```{r Model All Forward-Analysis, include=FALSE}
+
+```
+
+```{r Model All Backward-Analysis, include=FALSE}
+
+```
+
 ---
 
 ## Comparing Models
 
-```{r}
+```{r , echo=FALSE}
 
 StatTable_ALL <- full_join(StatTable_W,StatTable_E) |> 
   full_join(StatTable_I) |> 
   full_join(StatTable_O) |> 
-  full_join(StatTable_P)
+  full_join(StatTable_P) |> 
+  full_join(StatTable_A) |>
+  arrange(CV_RMSE) |> 
+  print()
 
 ```
 
