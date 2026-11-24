@@ -784,6 +784,48 @@ repeat {
 print(best)
 print(remaining)
 
+#Train the Best Model
+Fit <- workflow() |> 
+  add_model(communities_mod) |> 
+  add_recipe(recipe |> step_rm(starts_with(dropped))) |> 
+  fit(training_data)
+
+Equation <- tidy(Fit)
+
+#Test the model on the testing data
+Predict <- predict(Fit, testing_data) |> 
+  bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
+  mutate(
+    resid = ViolentCrimesPerPop.numeric - .pred
+  )
+
+#Look at residuals vs predicted value
+Predict |> 
+ggplot(
+  aes(x = .pred,
+      y = resid,
+      colour = ViolentCrimesPerPop.numeric)
+)+
+  geom_point()
+
+#Store some data for later comparison
+RMSE_RSQ <- communities_wflow |> 
+  fit_resamples(folds) |> 
+  collect_metrics(summarize = FALSE) |> 
+  select(id,.estimate,.metric) |> 
+  pivot_wider(
+    names_from = .metric,
+    values_from = .estimate
+  )
+
+StatTable_A_BW_RMSE <- tibble(Model = c("Model All FW"),
+                   CV_RSqrd_Train = round(mean(RMSE_RSQ$rsq), digits = 3),
+                   RSqrd_Test = round(RSqrd_Test$.estimate, digits = 3),
+                   AdjRSqrd_Train = round(c(glance(Fit)$adj.r.squared), digits = 3),
+                   CV_RMSE = mean(RMSE_RSQ$rmse),
+                   NumOfPred = c(nrow(summary(recipe))-1))
+
+
 ```
 
 ```{r Model All Forward-Analysis, include=FALSE}
@@ -860,6 +902,23 @@ ggplot(
       colour = ViolentCrimesPerPop.numeric)
 )+
   geom_point()
+
+#Store some data for later comparison
+RMSE_RSQ <- communities_wflow |> 
+  fit_resamples(folds) |> 
+  collect_metrics(summarize = FALSE) |> 
+  select(id,.estimate,.metric) |> 
+  pivot_wider(
+    names_from = .metric,
+    values_from = .estimate
+  )
+
+StatTable_A_FW_RMSE <- tibble(Model = c("Model All FW"),
+                   CV_RSqrd_Train = round(mean(RMSE_RSQ$rsq), digits = 3),
+                   RSqrd_Test = round(RSqrd_Test$.estimate, digits = 3),
+                   AdjRSqrd_Train = round(c(glance(Fit)$adj.r.squared), digits = 3),
+                   CV_RMSE = mean(RMSE_RSQ$rmse),
+                   NumOfPred = c(nrow(summary(recipe))-1))
 
 ```
 
