@@ -230,14 +230,24 @@ RMSE_RSQ <- communities_wflow |>
     values_from = .estimate
   )
 
-RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
-
 #Test the model
+
 Predict <- predict(Fit, testing_data) |> 
   bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
   mutate(
     resid = ViolentCrimesPerPop.numeric - .pred
   )
+
+RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
+
+#Store some data for later comparison
+
+StatTable_W <- tibble(Model = c("Model Wealth"),
+                   CV_RSqrd_Train = round(mean(RMSE_RSQ$rsq), digits = 3),
+                   RSqrd_Test = round(RSqrd_Test$.estimate, digits = 3),
+                   AdjRSqrd_Train = round(c(glance(Fit)$adj.r.squared), digits = 3),
+                   CV_RMSE = mean(RMSE_RSQ$rmse),
+                   NumOfPred = c(nrow(summary(recipe))-1))
 
 #Look at residuals vs predicted value
 Predict |> 
@@ -248,19 +258,9 @@ ggplot(
 )+
   geom_point()
 
-#Store some data for later comparison
-StatTable_W <- tibble(Model = c("Model Wealth"),
-                   CV_RSqrd_Train = round(mean(RMSE_RSQ$rsq), digits = 3),
-                   RSqrd_Test = round(RSqrd_Test$.estimate, digits = 3),
-                   AdjRSqrd_Train = round(c(glance(Fit)$adj.r.squared), digits = 3),
-                   CV_RMSE = mean(RMSE_RSQ$rmse),
-                   NumOfPred = c(nrow(summary(recipe))-1))
-
-
-
 ```
 
-```{r Cor-vs-Eq W, echo = false}
+```{r Cor-vs-Eq W, echo = FALSE}
 COR <- communities_W |> 
   summarise(mutate(
     across(!c(ViolentCrimesPerPop.numeric), ~ cor(ViolentCrimesPerPop.numeric,.))
@@ -391,14 +391,14 @@ RMSE_RSQ <- communities_wflow |>
     values_from = .estimate
   )
 
-RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
-
 #Test the model
 Predict <- predict(Fit, testing_data) |> 
   bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
   mutate(
     resid = ViolentCrimesPerPop.numeric - .pred
   )
+
+RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
 #Look at residuals vs predicted value
 Predict |> 
@@ -418,7 +418,7 @@ StatTable_I <- tibble(Model = c("Model Income"),
                    NumOfPred = c(nrow(summary(recipe))-1))
 ```
 
-```{r Cor-vs-Eq I, echo = false}
+```{r Cor-vs-Eq I, echo = FALSE}
 COR <- communities_I |> 
   summarise(mutate(
     across(!c(ViolentCrimesPerPop.numeric), ~ cor(ViolentCrimesPerPop.numeric,.))
@@ -548,14 +548,14 @@ RMSE_RSQ <- communities_wflow |>
     values_from = .estimate
   )
 
-RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
-
 #Test the model
 Predict <- predict(Fit, testing_data) |> 
   bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
   mutate(
     resid = ViolentCrimesPerPop.numeric - .pred
   )
+
+RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
 #Look at residuals vs predicted value
 Predict |> 
@@ -575,7 +575,7 @@ StatTable_O <- tibble(Model = c("Model Occupation"),
                    NumOfPred = c(nrow(summary(recipe))-1))
 ```
 
-```{r Cor-vs-Eq O, echo = false}
+```{r Cor-vs-Eq O, echo = FALSE}
 COR <- communities_O |> 
   summarise(mutate(
     across(!c(ViolentCrimesPerPop.numeric), ~ cor(ViolentCrimesPerPop.numeric,.))
@@ -703,14 +703,14 @@ RMSE_RSQ <- communities_wflow |>
     values_from = .estimate
   )
 
-RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
-
 #Test the model
 Predict <- predict(Fit, testing_data) |> 
   bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
   mutate(
     resid = ViolentCrimesPerPop.numeric - .pred
   )
+
+RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
 #Look at residuals vs predicted value
 Predict |> 
@@ -730,7 +730,7 @@ StatTable_E <- tibble(Model = c("Model Education"),
                    NumOfPred = c(nrow(summary(recipe))-1))
 ```
 
-```{r Cor-vs-Eq E, echo = false}
+```{r Cor-vs-Eq E, echo = FALSE}
 COR <- communities_E |> 
   summarise(mutate(
     across(!c(ViolentCrimesPerPop.numeric), ~ cor(ViolentCrimesPerPop.numeric,.))
@@ -863,14 +863,14 @@ RMSE_RSQ <- communities_wflow |>
     values_from = .estimate
   )
 
-RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
-
 #Test the model
 Predict <- predict(Fit, testing_data) |> 
   bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
   mutate(
     resid = ViolentCrimesPerPop.numeric - .pred
   )
+
+RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
 #Look at residuals vs predicted value
 Predict |> 
@@ -984,8 +984,6 @@ RMSE_RSQ <- communities_wflow |>
     values_from = .estimate
   )
 
-RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
-
 Equation <- tidy(Fit) |> 
   select(estimate, term) |>
   filter_out(term == "(Intercept)") |> 
@@ -998,6 +996,8 @@ Predict <- predict(Fit, testing_data) |>
   mutate(
     resid = ViolentCrimesPerPop.numeric - .pred
   )
+
+RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
 #Look at residuals vs predicted value
 Predict |> 
@@ -1017,188 +1017,6 @@ StatTable_A <- tibble(Model = c("Model All"),
                    NumOfPred = c(nrow(summary(recipe))-1))
 ```
 
-```{r Model All Backward-Analysis, include=FALSE}
-training_data <- train |>
-select(Variables) |> 
-  drop_na()
-testing_data <- test |>
-select(Variables) |> 
-  drop_na()
-
-#Make the recipe for the Models
-recipe <- recipe(ViolentCrimesPerPop.numeric ~ ., data = training_data) |> 
-  step_naomit() |> 
-  step_dummy(all_nominal(), -all_outcomes()) |> 
-  step_zv(all_predictors())
-
-folds <- vfold_cv(training_data, v = 5)
-
-#Variables for the Repeat function
-vars <- Variables[!Variables %in% c("ViolentCrimesPerPop.numeric")]
-dropped <- character(0)
-best <- cv_rmse(dropped)
-history <- tibble()
-
-repeat {
-  remaining <- setdiff(vars, added)
-  if (length(remaining) == 0) break
-  scores <- map_dbl(remaining, ~ cv_rmse(setdiff(vars, c(added, .x))))
-  history <- bind_rows(history,
-    tibble(round = length(added) + 1, add = remaining, cv_rmse = scores))
-  if (min(scores) >= best) break
-  added <- c(added, remaining[which.min(scores)])
-  best  <- min(scores)
-}
-
-print(best)
-print(remaining)
-
-#Train the Best Model
-Fit <- workflow() |> 
-  add_model(communities_mod) |> 
-  add_recipe(recipe |> step_rm(starts_with(dropped))) |> 
-  fit(training_data)
-
-Equation <- tidy(Fit) |> 
-  select(estimate, term) |>
-  filter_out(term == "(Intercept)") |> 
-  rename(Variable = "term",
-         'Eq. Const.' = "estimate")
-
-#Test the model on the testing data
-Predict <- predict(Fit, testing_data) |> 
-  bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
-  mutate(
-    resid = ViolentCrimesPerPop.numeric - .pred
-  )
-
-#Look at residuals vs predicted value
-Predict |> 
-ggplot(
-  aes(x = .pred,
-      y = resid,
-      colour = ViolentCrimesPerPop.numeric)
-)+
-  geom_point()
-
-#Store some data for later comparison
-RMSE_RSQ <- communities_wflow |> 
-  fit_resamples(folds) |> 
-  collect_metrics(summarize = FALSE) |> 
-  select(id,.estimate,.metric) |> 
-  pivot_wider(
-    names_from = .metric,
-    values_from = .estimate
-  )
-
-StatTable_A_BW_RMSE <- tibble(Model = c("Model All FW"),
-                   CV_RSqrd_Train = round(mean(RMSE_RSQ$rsq), digits = 3),
-                   RSqrd_Test = round(RSqrd_Test$.estimate, digits = 3),
-                   AdjRSqrd_Train = round(c(glance(Fit)$adj.r.squared), digits = 3),
-                   CV_RMSE = mean(RMSE_RSQ$rmse),
-                   NumOfPred = c(nrow(summary(recipe))-1))
-
-
-```
-
-```{r Model Forward Analysis 1, include=FALSE}
-#Select the Variables
-training_data <- train |>
-select(Variables) |> 
-  drop_na()
-testing_data <- test |>
-select(Variables) |> 
-  drop_na()
-
-#Make the recipe for the Models
-recipe <- recipe(ViolentCrimesPerPop.numeric ~ ., data = training_data) |> 
-  step_naomit() |> 
-  step_dummy(all_nominal(), -all_outcomes()) |> 
-  step_zv(all_predictors())
-
-folds <- vfold_cv(training_data, v = 5)
-
-#Make the Variables for the repeat function
-
-vars <- Variables[!Variables %in% c("ViolentCrimesPerPop.numeric")]
-added <- character(0)
-best <- Inf
-history <- tibble()
-
-#Create the drop CV_RMSE function
-cv_rmse <- function(drop){
-  workflow() |> 
-    add_model(communities_mod) |> 
-    add_recipe(recipe |> step_rm(starts_with(drop))) |> 
-    fit_resamples(folds) |> 
-    collect_metrics() |> 
-    filter(.metric == "rmse") |> 
-    pull(mean)
-}
-
-#Create the repeat function
-repeat{
-  remaining <- setdiff(vars, added)
-  if (length(remaining) == 0) break
-  scores <- map_dbl(remaining, ~cv_rmse(setdiff(vars, c(added, .x))))
-  history <- bind_rows(history,
-                       tibble( round = length(added) + 1, add = remaining, cv_rmse =scores))
-  if(min(scores) >= best) break
-  added <- c(added, remaining[which.min(scores)])
-  best <- min(scores)
-}
-
-print(best)
-print(remaining)
-print(added)
-
-#Use the 'remain' vector to create the new linear model
-Fit <- workflow() |> 
-  add_model(communities_mod) |> 
-  add_recipe(recipe |> step_rm(starts_with(remaining))) |> 
-  fit(training_data)
-
-Equation <- tidy(Fit) |> 
-  select(estimate, term) |>
-  filter_out(term == "(Intercept)") |> 
-  rename(Variable = "term",
-         'Eq. Const.' = "estimate")
-
-#Test the model on the testing data
-Predict <- predict(Fit, testing_data) |> 
-  bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
-  mutate(
-    resid = ViolentCrimesPerPop.numeric - .pred
-  )
-
-#Look at residuals vs predicted value
-Predict |> 
-ggplot(
-  aes(x = .pred,
-      y = resid,
-      colour = ViolentCrimesPerPop.numeric)
-)+
-  geom_point()
-
-#Store some data for later comparison
-RMSE_RSQ <- communities_wflow |> 
-  fit_resamples(folds) |> 
-  collect_metrics(summarize = FALSE) |> 
-  select(id,.estimate,.metric) |> 
-  pivot_wider(
-    names_from = .metric,
-    values_from = .estimate
-  )
-
-StatTable_A_FW_RMSE <- tibble(Model = c("Model All FW"),
-                   CV_RSqrd_Train = round(mean(RMSE_RSQ$rsq), digits = 3),
-                   RSqrd_Test = round(RSqrd_Test$.estimate, digits = 3),
-                   AdjRSqrd_Train = round(c(glance(Fit)$adj.r.squared), digits = 3),
-                   CV_RMSE = mean(RMSE_RSQ$rmse),
-                   NumOfPred = c(nrow(summary(recipe))-1))
-
-```
-
 ---
 
 ## Comparing Models
@@ -1210,8 +1028,6 @@ StatTable_ALL <- full_join(StatTable_W,StatTable_E) |>
   full_join(StatTable_O) |> 
   full_join(StatTable_P) |> 
   full_join(StatTable_A) |>
-  full_join(StatTable_A_FW_RMSE) |>
-  full_join(StatTable_A_BW_RMSE) |>
   arrange(CV_RMSE) |> 
   print()
 

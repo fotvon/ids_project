@@ -73,6 +73,14 @@ communities_clean_df |>
 ```
 
 ```{r}
+communities_clean_df |> 
+  ggplot(
+    aes(x = ViolentCrimesPerPop.numeric)
+  )+
+  geom_histogram(bins = 7)
+```
+
+```{r}
 #Values presented in this table are "normalised" from 0 to 1. A normalised value represents where a value sits on the range. e.g: A value of 0 represents the min/smallest population, while a value of 1 represents the largest population.
 
 #It also needs to be pivoted longer, while the "clean" data looks clean, its not fully clean. we will insert a categorical variable. We will also remove the first 3 variables and fold variable, as it is unsure how they add to the data in a meaningful way.
