@@ -198,7 +198,7 @@ ggplot(aes(x="ViolentCrime",y=reorder(Variable,Value), fill = Value))+
 
 ```{r Model W, include=FALSE}
 
-#Select the necessary columns fomr the training and test data
+#Select the necessary columns from the training and test data
 training_data <- train |>
   select(ViolentCrimesPerPop.numeric,medIncome.numeric,perCapInc.numeric,PctPopUnderPov.numeric)
 testing_data <- test |>
@@ -284,10 +284,18 @@ CorEq_Tbl <- full_join(COR, Equation) |>
     values_to = "Value"
   )
 
+ordering <- CorEq_Tbl |> 
+  filter(Type == "Cor") |> 
+  arrange((Value)) |> 
+  pull(Variable) |> 
+  as.factor()
+
+CorEq_Tbl$Variable <- factor(CorEq_Tbl$Variable, levels = ordering)
+
 CorEq_Tbl |> 
-ggplot(aes(x=Type,y=reorder(Variable,Value), fill = Value))+
+ggplot(aes(x=Type,y = Variable, fill = Value))+
   geom_tile(color = "white", linewidth = 1) +
-  geom_text(aes(label = round(Value, 2)), size = 4) +
+  geom_text(aes(label = round(Value, 3)), size = 4) +
   scale_fill_gradient2(
     low = "steelblue",
     mid = "white",
@@ -303,9 +311,7 @@ ggplot(aes(x=Type,y=reorder(Variable,Value), fill = Value))+
     fill = "Value (r)"
   )
 
-CorEq_Tbl |>
-                                      filter(Type == "Cor") |> 
-                                      select(Value)
+
 ```
 
 ---
@@ -436,10 +442,18 @@ CorEq_Tbl <- full_join(COR, Equation) |>
     values_to = "Value"
   )
 
+ordering <- CorEq_Tbl |> 
+  filter(Type == "Cor") |> 
+  arrange((Value)) |> 
+  pull(Variable) |> 
+  as.factor()
+
+CorEq_Tbl$Variable <- factor(CorEq_Tbl$Variable, levels = ordering)
+
 CorEq_Tbl |> 
-ggplot(aes(x=Type,y=reorder(Variable,Value), fill = Value))+
+ggplot(aes(x=Type,y = Variable, fill = Value))+
   geom_tile(color = "white", linewidth = 1) +
-  geom_text(aes(label = round(Value, 2)), size = 4) +
+  geom_text(aes(label = round(Value, 3)), size = 4) +
   scale_fill_gradient2(
     low = "steelblue",
     mid = "white",
@@ -561,7 +575,7 @@ StatTable_O <- tibble(Model = c("Model Occupation"),
                    NumOfPred = c(nrow(summary(recipe))-1))
 ```
 
-```{r Cor-vs-Eq W, echo = false}
+```{r Cor-vs-Eq O, echo = false}
 COR <- communities_O |> 
   summarise(mutate(
     across(!c(ViolentCrimesPerPop.numeric), ~ cor(ViolentCrimesPerPop.numeric,.))
@@ -585,10 +599,18 @@ CorEq_Tbl <- full_join(COR, Equation) |>
     values_to = "Value"
   )
 
+ordering <- CorEq_Tbl |> 
+  filter(Type == "Cor") |> 
+  arrange((Value)) |> 
+  pull(Variable) |> 
+  as.factor()
+
+CorEq_Tbl$Variable <- factor(CorEq_Tbl$Variable, levels = ordering)
+
 CorEq_Tbl |> 
-ggplot(aes(x=Type,y=reorder(Variable,Value), fill = Value))+
+ggplot(aes(x=Type,y = Variable, fill = Value))+
   geom_tile(color = "white", linewidth = 1) +
-  geom_text(aes(label = round(Value, 2)), size = 4) +
+  geom_text(aes(label = round(Value, 3)), size = 4) +
   scale_fill_gradient2(
     low = "steelblue",
     mid = "white",
@@ -708,7 +730,7 @@ StatTable_E <- tibble(Model = c("Model Education"),
                    NumOfPred = c(nrow(summary(recipe))-1))
 ```
 
-```{r Cor-vs-Eq W, echo = false}
+```{r Cor-vs-Eq E, echo = false}
 COR <- communities_E |> 
   summarise(mutate(
     across(!c(ViolentCrimesPerPop.numeric), ~ cor(ViolentCrimesPerPop.numeric,.))
@@ -732,10 +754,18 @@ CorEq_Tbl <- full_join(COR, Equation) |>
     values_to = "Value"
   )
 
+ordering <- CorEq_Tbl |> 
+  filter(Type == "Cor") |> 
+  arrange((Value)) |> 
+  pull(Variable) |> 
+  as.factor()
+
+CorEq_Tbl$Variable <- factor(CorEq_Tbl$Variable, levels = ordering)
+
 CorEq_Tbl |> 
-ggplot(aes(x=Type,y=reorder(Variable,Value), fill = Value))+
+ggplot(aes(x=Type,y = Variable, fill = Value))+
   geom_tile(color = "white", linewidth = 1) +
-  geom_text(aes(label = round(Value, 2)), size = 4) +
+  geom_text(aes(label = round(Value, 3)), size = 4) +
   scale_fill_gradient2(
     low = "steelblue",
     mid = "white",
@@ -750,10 +780,6 @@ ggplot(aes(x=Type,y=reorder(Variable,Value), fill = Value))+
     y = "",
     fill = "Value (r)"
   )
-
-CorEq_Tbl |>
-filter(Type == "Cor") |> 
-  select(Value)
 ```
 
 ---
@@ -864,6 +890,60 @@ StatTable_P <- tibble(Model = c("Model Police"),
                    NumOfPred = c(nrow(summary(recipe))-1))
 ```
 
+```{r Cor-vs-Eq P, echo=FALSE}
+#Correlation Values
+COR <- communities_P |> 
+  summarise(mutate(
+    across(!c(ViolentCrimesPerPop.numeric), ~ cor(ViolentCrimesPerPop.numeric,.))
+  )) |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Variable",
+    values_to = "Cor"
+  )
+
+Equation <- tidy(Fit) |> 
+  select(estimate, term) |>
+  filter_out(term == "(Intercept)") |> 
+  rename(Variable = "term",
+         'Eq. Const.' = "estimate")
+
+CorEq_Tbl <- full_join(COR, Equation) |> 
+  drop_na() |> 
+  pivot_longer(
+    cols = c("Eq. Const.",Cor),
+    names_to = "Type",
+    values_to = "Value"
+  )
+
+ordering <- CorEq_Tbl |> 
+  filter(Type == "Cor") |> 
+  arrange((Value)) |> 
+  pull(Variable) |> 
+  as.factor()
+
+CorEq_Tbl$Variable <- factor(CorEq_Tbl$Variable, levels = ordering)
+
+CorEq_Tbl |> 
+ggplot(aes(x=Type,y = Variable, fill = Value))+
+  geom_tile(color = "white", linewidth = 1) +
+  geom_text(aes(label = round(Value, 3)), size = 4) +
+  scale_fill_gradient2(
+    low = "steelblue",
+    mid = "white",
+    high = "coral",
+    midpoint = 0,
+    limits = c(-1, 1)
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Correlation Vs Equation Value",
+    x = "",
+    y = "",
+    fill = "Value (r)"
+  )
+```
+
 ---
 
 ## Analysing All Variables Together
@@ -905,6 +985,12 @@ RMSE_RSQ <- communities_wflow |>
   )
 
 RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
+
+Equation <- tidy(Fit) |> 
+  select(estimate, term) |>
+  filter_out(term == "(Intercept)") |> 
+  rename(Variable = "term",
+         'Eq. Const.' = "estimate")
 
 #Test the model
 Predict <- predict(Fit, testing_data) |> 
@@ -973,7 +1059,11 @@ Fit <- workflow() |>
   add_recipe(recipe |> step_rm(starts_with(dropped))) |> 
   fit(training_data)
 
-Equation <- tidy(Fit)
+Equation <- tidy(Fit) |> 
+  select(estimate, term) |>
+  filter_out(term == "(Intercept)") |> 
+  rename(Variable = "term",
+         'Eq. Const.' = "estimate")
 
 #Test the model on the testing data
 Predict <- predict(Fit, testing_data) |> 
@@ -1068,7 +1158,11 @@ Fit <- workflow() |>
   add_recipe(recipe |> step_rm(starts_with(remaining))) |> 
   fit(training_data)
 
-Equation <- tidy(Fit)
+Equation <- tidy(Fit) |> 
+  select(estimate, term) |>
+  filter_out(term == "(Intercept)") |> 
+  rename(Variable = "term",
+         'Eq. Const.' = "estimate")
 
 #Test the model on the testing data
 Predict <- predict(Fit, testing_data) |> 
