@@ -33,8 +33,6 @@ library(rmarkdown)
 library(palmerpenguins)
 library(knitr)
 library(xaringanthemer)
-library(xaringanExtra)
-library(quarto)
 ```
 
 ```{r setup, include=FALSE}
@@ -828,7 +826,7 @@ StatTable_A_BW_RMSE <- tibble(Model = c("Model All FW"),
 
 ```
 
-```{r Model All Forward-Analysis, include=FALSE}
+```{r Model Forward Analysis 1, include=FALSE}
 #Select the Variables
 training_data <- train |>
 select(Variables) |> 
@@ -933,6 +931,8 @@ StatTable_ALL <- full_join(StatTable_W,StatTable_E) |>
   full_join(StatTable_O) |> 
   full_join(StatTable_P) |> 
   full_join(StatTable_A) |>
+  full_join(StatTable_A_FW_RMSE) |>
+  full_join(StatTable_A_BW_RMSE) |>
   arrange(CV_RMSE) |> 
   print()
 
