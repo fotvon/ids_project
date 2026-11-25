@@ -182,7 +182,7 @@ ggplot(aes(x="ViolentCrime",y=reorder(Variable,Value), fill = Value))+
   ) +
   theme_minimal() +
   labs(
-    title = "Wealth & Crime Coreelation",
+    title = "Wealth & Crime Correlation",
     x = "",
     y = "",
     fill = "Correlation (r)"
@@ -259,6 +259,55 @@ StatTable_W <- tibble(Model = c("Model Wealth"),
 
 
 ```
+
+```{r Cor-vs-Eq W, echo = false}
+COR <- communities_W |> 
+  summarise(mutate(
+    across(!c(ViolentCrimesPerPop.numeric), ~ cor(ViolentCrimesPerPop.numeric,.))
+  )) |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Variable",
+    values_to = "Cor"
+  )
+
+Equation <- tidy(Fit) |> 
+  select(estimate, term) |>
+  filter_out(term == "(Intercept)") |> 
+  rename(Variable = "term",
+         'Eq. Const.' = "estimate")
+
+CorEq_Tbl <- full_join(COR, Equation) |> 
+  pivot_longer(
+    cols = c("Eq. Const.",Cor),
+    names_to = "Type",
+    values_to = "Value"
+  )
+
+CorEq_Tbl |> 
+ggplot(aes(x=Type,y=reorder(Variable,Value), fill = Value))+
+  geom_tile(color = "white", linewidth = 1) +
+  geom_text(aes(label = round(Value, 2)), size = 4) +
+  scale_fill_gradient2(
+    low = "steelblue",
+    mid = "white",
+    high = "coral",
+    midpoint = 0,
+    limits = c(-1, 1)
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Correlation Vs Equation Value",
+    x = "",
+    y = "",
+    fill = "Value (r)"
+  )
+
+CorEq_Tbl |>
+                                      filter(Type == "Cor") |> 
+                                      select(Value)
+```
+
 ---
 
 class: middle, center
@@ -361,6 +410,50 @@ StatTable_I <- tibble(Model = c("Model Income"),
                    AdjRSqrd_Train = round(c(glance(Fit)$adj.r.squared), digits = 3),
                    CV_RMSE = mean(RMSE_RSQ$rmse),
                    NumOfPred = c(nrow(summary(recipe))-1))
+```
+
+```{r Cor-vs-Eq I, echo = false}
+COR <- communities_I |> 
+  summarise(mutate(
+    across(!c(ViolentCrimesPerPop.numeric), ~ cor(ViolentCrimesPerPop.numeric,.))
+  )) |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Variable",
+    values_to = "Cor"
+  )
+
+Equation <- tidy(Fit) |> 
+  select(estimate, term) |>
+  filter_out(term == "(Intercept)") |> 
+  rename(Variable = "term",
+         'Eq. Const.' = "estimate")
+
+CorEq_Tbl <- full_join(COR, Equation) |> 
+  pivot_longer(
+    cols = c("Eq. Const.",Cor),
+    names_to = "Type",
+    values_to = "Value"
+  )
+
+CorEq_Tbl |> 
+ggplot(aes(x=Type,y=reorder(Variable,Value), fill = Value))+
+  geom_tile(color = "white", linewidth = 1) +
+  geom_text(aes(label = round(Value, 2)), size = 4) +
+  scale_fill_gradient2(
+    low = "steelblue",
+    mid = "white",
+    high = "coral",
+    midpoint = 0,
+    limits = c(-1, 1)
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Correlation Vs Equation Value",
+    x = "",
+    y = "",
+    fill = "Value (r)"
+  )
 ```
 
 ---
@@ -468,6 +561,50 @@ StatTable_O <- tibble(Model = c("Model Occupation"),
                    NumOfPred = c(nrow(summary(recipe))-1))
 ```
 
+```{r Cor-vs-Eq W, echo = false}
+COR <- communities_O |> 
+  summarise(mutate(
+    across(!c(ViolentCrimesPerPop.numeric), ~ cor(ViolentCrimesPerPop.numeric,.))
+  )) |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Variable",
+    values_to = "Cor"
+  )
+
+Equation <- tidy(Fit) |> 
+  select(estimate, term) |>
+  filter_out(term == "(Intercept)") |> 
+  rename(Variable = "term",
+         'Eq. Const.' = "estimate")
+
+CorEq_Tbl <- full_join(COR, Equation) |> 
+  pivot_longer(
+    cols = c("Eq. Const.",Cor),
+    names_to = "Type",
+    values_to = "Value"
+  )
+
+CorEq_Tbl |> 
+ggplot(aes(x=Type,y=reorder(Variable,Value), fill = Value))+
+  geom_tile(color = "white", linewidth = 1) +
+  geom_text(aes(label = round(Value, 2)), size = 4) +
+  scale_fill_gradient2(
+    low = "steelblue",
+    mid = "white",
+    high = "coral",
+    midpoint = 0,
+    limits = c(-1, 1)
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Correlation Vs Equation Value",
+    x = "",
+    y = "",
+    fill = "Value (r)"
+  )
+```
+
 ---
 class: middle, center
 # Analysing Education and Violent Crimes
@@ -569,6 +706,54 @@ StatTable_E <- tibble(Model = c("Model Education"),
                    AdjRSqrd_Train = round(c(glance(Fit)$adj.r.squared), digits = 3),
                    CV_RMSE = mean(RMSE_RSQ$rmse),
                    NumOfPred = c(nrow(summary(recipe))-1))
+```
+
+```{r Cor-vs-Eq W, echo = false}
+COR <- communities_E |> 
+  summarise(mutate(
+    across(!c(ViolentCrimesPerPop.numeric), ~ cor(ViolentCrimesPerPop.numeric,.))
+  )) |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Variable",
+    values_to = "Cor"
+  )
+
+Equation <- tidy(Fit) |> 
+  select(estimate, term) |>
+  filter_out(term == "(Intercept)") |> 
+  rename(Variable = "term",
+         'Eq. Const.' = "estimate")
+
+CorEq_Tbl <- full_join(COR, Equation) |> 
+  pivot_longer(
+    cols = c("Eq. Const.",Cor),
+    names_to = "Type",
+    values_to = "Value"
+  )
+
+CorEq_Tbl |> 
+ggplot(aes(x=Type,y=reorder(Variable,Value), fill = Value))+
+  geom_tile(color = "white", linewidth = 1) +
+  geom_text(aes(label = round(Value, 2)), size = 4) +
+  scale_fill_gradient2(
+    low = "steelblue",
+    mid = "white",
+    high = "coral",
+    midpoint = 0,
+    limits = c(-1, 1)
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Correlation Vs Equation Value",
+    x = "",
+    y = "",
+    fill = "Value (r)"
+  )
+
+CorEq_Tbl |>
+filter(Type == "Cor") |> 
+  select(Value)
 ```
 
 ---
