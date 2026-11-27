@@ -50,7 +50,21 @@ communities_clean <- read.csv("data/communities_heading.data") |>
            LemasGangUnitDeploy.numeric == 1 ~ "Yes",
            LemasGangUnitDeploy.numeric == 0 ~ "No",
            LemasGangUnitDeploy.numeric == 0.5 ~ "PrtTime"
-         ))
+         )) |> 
+  mutate(risk = case_when(
+      ViolentCrimesPerPop.numeric <= 1/7 ~ "Very Low Risk",
+      ViolentCrimesPerPop.numeric >1/7 & ViolentCrimesPerPop.numeric <= 2/7 ~ "Low Risk",
+      ViolentCrimesPerPop.numeric >2/7 & ViolentCrimesPerPop.numeric <= 3/7 ~ "Slightly low Risk",
+      ViolentCrimesPerPop.numeric >3/7 & ViolentCrimesPerPop.numeric <= 4/7 ~ "Somewhat Risk",
+      ViolentCrimesPerPop.numeric >4/7 & ViolentCrimesPerPop.numeric <= 5/7 ~ "Slightly High Risk",
+      ViolentCrimesPerPop.numeric >5/7 & ViolentCrimesPerPop.numeric <= 6/7 ~ "High Risk",
+      ViolentCrimesPerPop.numeric >6/7 ~ "Very High Risk"
+    ))
+
+factor_order <- c("Very Low Risk","Low Risk","Slightly low Risk","Somewhat Risk","Slightly High Risk","High Risk","Very High Risk") |> 
+  as.factor()
+
+communities_clean$risk <- factor(communities_clean$risk, levels = factor_order)
 
 ```
 
@@ -61,17 +75,21 @@ communities_split <- initial_split(communities_clean, prop = 0.75)
 train <- training(communities_split)
 test <- testing(communities_split)
 
-#Define the Model
-#We are going to use a regular linear model
+#Define the Models
+#We are going to use a regular linear model for predicting the ViolentCrimePerPop.numeric
 communities_mod <- linear_reg() |> 
   set_engine("lm")
+
+#We are going to use a GLM probability model for predicting the "risk"
+communities_nnet_mod <- multinom_reg() |> 
+  set_engine("nnet")
+
 
 #Variable List
 Variables <- c("ViolentCrimesPerPop.numeric","medIncome.numeric","perCapInc.numeric","PctPopUnderPov.numeric","pctWWage.numeric","pctWFarmSelf.numeric","pctWInvInc.numeric","pctWSocSec.numeric","pctWPubAsst.numeric","pctWRetire.numeric","PctUnemployed.numeric","PctEmploy.numeric","PctEmplManu.numeric","PctEmplProfServ.numeric","PctLess9thGrade.numeric","PctNotHSGrad.numeric","PctBSorMore.numeric","LemasSwFTFieldPerPop.numeric","LemasPctPolicOnPatr.numeric","LemasPctOfficDrugUn.numeric","PolicBudgPerPop.numeric","LemasSwFTPerPop.numeric","LemasGangUnitDeploy.numeric")
 ```
 
 ```{r include=FALSE}
-
 #Background image
 style_xaringan(
   title_slide_background_image = "img/confetti.jpg"
@@ -153,13 +171,36 @@ class: middle, center
 
 ---
 
-## Wealth Correlated With Violent Crimes
+## Summary Statistics of Wealth Variables
 
-```{r Analyse wealth,out.width="80%",echo=FALSE, fig.align='center'}
+```{r W-SummaryStat, echo=FALSE}
 #Smaller Data set for this Analysis
 communities_W <- communities_clean |> 
   select(medIncome.numeric,perCapInc.numeric,PctPopUnderPov.numeric,ViolentCrimesPerPop.numeric)
 
+SummaryStats <- communities_W |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Variable",
+    values_to = "Value"
+  ) |> 
+  group_by(Variable) |> 
+  mutate(
+    Mean = round(mean(Value), digits = 2),
+    median = median(Value),
+    SD = round(sd(Value), digits = 2)
+  ) |> 
+  select(-Value) |> 
+  unique()
+
+kable(SummaryStats, format = "html")
+```
+
+---
+
+## Wealth Correlated With Violent Crimes
+
+```{r Analyse wealth,out.width="80%",echo=FALSE, fig.align='center'}
 #Correlation Heat Map plot
 communities_W |> 
   summarise(mutate(
@@ -190,7 +231,6 @@ ggplot(aes(x="ViolentCrime",y=reorder(Variable,Value), fill = Value))+
 
 
 ```
-]
 
 ---
 
@@ -231,12 +271,43 @@ RMSE_RSQ <- communities_wflow |>
   )
 
 #Test the model
-
 Predict <- predict(Fit, testing_data) |> 
   bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
   mutate(
     resid = ViolentCrimesPerPop.numeric - .pred
-  )
+  ) |> 
+    mutate(risk = case_when(
+      ViolentCrimesPerPop.numeric <= 1/7 ~ "Very Low Risk",
+      ViolentCrimesPerPop.numeric >1/7 & ViolentCrimesPerPop.numeric <= 2/7 ~ "Low Risk",
+      ViolentCrimesPerPop.numeric >2/7 & ViolentCrimesPerPop.numeric <= 3/7 ~ "Slightly low Risk",
+      ViolentCrimesPerPop.numeric >3/7 & ViolentCrimesPerPop.numeric <= 4/7 ~ "Somewhat Risk",
+      ViolentCrimesPerPop.numeric >4/7 & ViolentCrimesPerPop.numeric <= 5/7 ~ "Slightly High Risk",
+      ViolentCrimesPerPop.numeric >5/7 & ViolentCrimesPerPop.numeric <= 6/7 ~ "High Risk",
+      ViolentCrimesPerPop.numeric >6/7 ~ "Very High Risk"
+    ),
+    pred.risk = case_when(
+      .pred <= 1/7 ~ "Very Low Risk",
+      .pred >1/7 & .pred <= 2/7 ~ "Low Risk",
+      .pred >2/7 & .pred <= 3/7 ~ "Slightly low Risk",
+      .pred >3/7 & .pred <= 4/7 ~ "Somewhat Risk",
+      .pred >4/7 & .pred <= 5/7 ~ "Slightly High Risk",
+      .pred >5/7 & .pred <= 6/7 ~ "High Risk",
+      .pred >6/7 ~ "Very High Risk"
+    ))
+
+#Look at how well the model predicts class
+ErrorMatrix_LM <- Predict |> 
+  group_by(pred.risk) |> 
+  mutate(
+    PredVsRisk = case_when(
+      pred.risk == risk ~ 1,
+      .default = 0),
+    Num_correct = sum(PredVsRisk),
+    Num_Guessed = sum(pred.risk == pred.risk),
+    Pct_Correct = sum(PredVsRisk)/sum(pred.risk == pred.risk)
+  ) |> 
+  select(Pct_Correct,pred.risk,Num_correct,Num_Guessed) |> 
+  unique()
 
 RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
@@ -259,6 +330,50 @@ ggplot(
   geom_point()
 
 ```
+
+```{r NNET-Model W}
+#Get the Data
+training_data <- train |>
+    select(risk,medIncome.numeric,perCapInc.numeric,PctPopUnderPov.numeric)
+testing_data <- test |>
+    select(risk,medIncome.numeric,perCapInc.numeric,PctPopUnderPov.numeric)
+
+folds <- vfold_cv(training_data, v = 10)
+
+#Recipe time
+recipe <- recipe(risk ~ ., data = training_data) |> 
+  step_naomit() |> 
+  step_zv(all_predictors())
+
+#Workflow time
+communities_wflow <- workflow() |> 
+  add_model(communities_nnet_mod) |> 
+  add_recipe(recipe)
+
+#Train the Model with the Variables
+Fit <- communities_wflow |> 
+  fit(training_data)
+
+#Test the Model
+Predict <- predict(Fit, testing_data) |> 
+  bind_cols(testing_data$risk)
+
+#What is the error Matrix
+ErrorMatrix_nnet <- Predict |> 
+  group_by(.pred_class) |> 
+  mutate(
+    PredVsRisk = case_when(
+      .pred_class == ...2 ~ 1,
+      .default = 0),
+    Num_Correct = sum(PredVsRisk),
+    Num_Guessed = sum(.pred_class == .pred_class),
+    Pct_Correct = sum(PredVsRisk)/sum(.pred_class == .pred_class)
+  ) |> 
+  select(Pct_Correct,.pred_class,Num_Correct,Num_Guessed) |> 
+  unique()
+
+```
+
 
 ```{r Cor-vs-Eq W, echo = FALSE}
 COR <- communities_W |> 
@@ -320,7 +435,33 @@ class: middle, center
 # Analysing Income and Violent Crimes
 
 ---
+## Summary Statistics of Income Variables
 
+```{r I-SummaryStat, echo=FALSE}
+#Smaller Data set for this Analysis
+communities_I <- communities_clean |> 
+  select(ViolentCrimesPerPop.numeric,pctWWage.numeric,pctWFarmSelf.numeric,pctWInvInc.numeric,pctWSocSec.numeric,pctWPubAsst.numeric,pctWRetire.numeric)
+
+SummaryStats <- communities_I |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Variable",
+    values_to = "Value"
+  ) |> 
+  group_by(Variable) |> 
+  mutate(
+    Mean = round(mean(Value), digits = 2),
+    median = median(Value),
+    SD = round(sd(Value), digits = 2)
+  ) |> 
+  select(-Value) |> 
+  unique()
+
+kable(SummaryStats, format = "html")
+
+```
+
+---
 ## Analysing Income and Violent Crimes
 
 ```{r Income, echo=FALSE, fig.align='center'}
@@ -396,7 +537,25 @@ Predict <- predict(Fit, testing_data) |>
   bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
   mutate(
     resid = ViolentCrimesPerPop.numeric - .pred
-  )
+  ) |> 
+    mutate(risk = case_when(
+      ViolentCrimesPerPop.numeric <= 1/7 ~ "Very Low Risk",
+      ViolentCrimesPerPop.numeric >1/7 & ViolentCrimesPerPop.numeric <= 2/7 ~ "Low Risk",
+      ViolentCrimesPerPop.numeric >2/7 & ViolentCrimesPerPop.numeric <= 3/7 ~ "Slightly low Risk",
+      ViolentCrimesPerPop.numeric >3/7 & ViolentCrimesPerPop.numeric <= 4/7 ~ "Somewhat Risk",
+      ViolentCrimesPerPop.numeric >4/7 & ViolentCrimesPerPop.numeric <= 5/7 ~ "Slighly High Risk",
+      ViolentCrimesPerPop.numeric >5/7 & ViolentCrimesPerPop.numeric <= 6/7 ~ "High Risk",
+      ViolentCrimesPerPop.numeric >6/7 ~ "Very High Risk"
+    ),
+    pred.risk = case_when(
+      .pred <= 1/7 ~ "Very Low Risk",
+      .pred >1/7 & .pred <= 2/7 ~ "Low Risk",
+      .pred >2/7 & .pred <= 3/7 ~ "Slightly low Risk",
+      .pred >3/7 & .pred <= 4/7 ~ "Somewhat Risk",
+      .pred >4/7 & .pred <= 5/7 ~ "Slighly High Risk",
+      .pred >5/7 & .pred <= 6/7 ~ "High Risk",
+      .pred >6/7 ~ "Very High Risk"
+    ))
 
 RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
@@ -475,7 +634,33 @@ class: middle, center
 # Analysing Occupation and Violent Crimes
 
 ---
+## Summary Statistics of Occupation Variables
 
+```{r O-SummaryStat, echo=FALSE}
+#Smaller Data set for this Analysis
+communities_O <- communities_clean |> 
+  select(ViolentCrimesPerPop.numeric,PctUnemployed.numeric,PctEmploy.numeric,PctEmplManu.numeric,PctEmplProfServ.numeric)
+
+SummaryStats <- communities_O |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Variable",
+    values_to = "Value"
+  ) |> 
+  group_by(Variable) |> 
+  mutate(
+    Mean = round(mean(Value), digits = 2),
+    median = median(Value),
+    SD = round(sd(Value), digits = 2)
+  ) |> 
+  select(-Value) |> 
+  unique()
+
+kable(SummaryStats, format = "html")
+
+```
+
+---
 ## Analysing Occupation and Violent Crimes
 
 ```{r Occupation, echo=FALSE, fig.align='center'}
@@ -553,7 +738,25 @@ Predict <- predict(Fit, testing_data) |>
   bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
   mutate(
     resid = ViolentCrimesPerPop.numeric - .pred
-  )
+  ) |> 
+    mutate(risk = case_when(
+      ViolentCrimesPerPop.numeric <= 1/7 ~ "Very Low Risk",
+      ViolentCrimesPerPop.numeric >1/7 & ViolentCrimesPerPop.numeric <= 2/7 ~ "Low Risk",
+      ViolentCrimesPerPop.numeric >2/7 & ViolentCrimesPerPop.numeric <= 3/7 ~ "Slightly low Risk",
+      ViolentCrimesPerPop.numeric >3/7 & ViolentCrimesPerPop.numeric <= 4/7 ~ "Somewhat Risk",
+      ViolentCrimesPerPop.numeric >4/7 & ViolentCrimesPerPop.numeric <= 5/7 ~ "Slighly High Risk",
+      ViolentCrimesPerPop.numeric >5/7 & ViolentCrimesPerPop.numeric <= 6/7 ~ "High Risk",
+      ViolentCrimesPerPop.numeric >6/7 ~ "Very High Risk"
+    ),
+    pred.risk = case_when(
+      .pred <= 1/7 ~ "Very Low Risk",
+      .pred >1/7 & .pred <= 2/7 ~ "Low Risk",
+      .pred >2/7 & .pred <= 3/7 ~ "Slightly low Risk",
+      .pred >3/7 & .pred <= 4/7 ~ "Somewhat Risk",
+      .pred >4/7 & .pred <= 5/7 ~ "Slighly High Risk",
+      .pred >5/7 & .pred <= 6/7 ~ "High Risk",
+      .pred >6/7 ~ "Very High Risk"
+    ))
 
 RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
@@ -632,7 +835,32 @@ class: middle, center
 # Analysing Education and Violent Crimes
 
 ---
+## Summary Statistics of Education Variables
 
+```{r E-SummaryStat,echo=FALSE}
+#Smaller Data set for this Analysis
+communities_E <- communities_clean |> 
+  select(ViolentCrimesPerPop.numeric,PctLess9thGrade.numeric,PctNotHSGrad.numeric,PctBSorMore.numeric)
+
+SummaryStats <- communities_E |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Variable",
+    values_to = "Value"
+  ) |> 
+  group_by(Variable) |> 
+  mutate(
+    Mean = round(mean(Value), digits = 2),
+    median = median(Value),
+    SD = round(sd(Value), digits = 2)
+  ) |> 
+  select(-Value) |> 
+  unique()
+
+kable(SummaryStats, format = "html")
+```
+
+---
 ## Analysing Education and Violent Crimes
 
 ```{r Education, echo=FALSE, fig.align='center'}
@@ -708,7 +936,25 @@ Predict <- predict(Fit, testing_data) |>
   bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
   mutate(
     resid = ViolentCrimesPerPop.numeric - .pred
-  )
+  ) |> 
+    mutate(risk = case_when(
+      ViolentCrimesPerPop.numeric <= 1/7 ~ "Very Low Risk",
+      ViolentCrimesPerPop.numeric >1/7 & ViolentCrimesPerPop.numeric <= 2/7 ~ "Low Risk",
+      ViolentCrimesPerPop.numeric >2/7 & ViolentCrimesPerPop.numeric <= 3/7 ~ "Slightly low Risk",
+      ViolentCrimesPerPop.numeric >3/7 & ViolentCrimesPerPop.numeric <= 4/7 ~ "Somewhat Risk",
+      ViolentCrimesPerPop.numeric >4/7 & ViolentCrimesPerPop.numeric <= 5/7 ~ "Slighly High Risk",
+      ViolentCrimesPerPop.numeric >5/7 & ViolentCrimesPerPop.numeric <= 6/7 ~ "High Risk",
+      ViolentCrimesPerPop.numeric >6/7 ~ "Very High Risk"
+    ),
+    pred.risk = case_when(
+      .pred <= 1/7 ~ "Very Low Risk",
+      .pred >1/7 & .pred <= 2/7 ~ "Low Risk",
+      .pred >2/7 & .pred <= 3/7 ~ "Slightly low Risk",
+      .pred >3/7 & .pred <= 4/7 ~ "Somewhat Risk",
+      .pred >4/7 & .pred <= 5/7 ~ "Slighly High Risk",
+      .pred >5/7 & .pred <= 6/7 ~ "High Risk",
+      .pred >6/7 ~ "Very High Risk"
+    ))
 
 RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
@@ -787,9 +1033,35 @@ class: middle, center
 # Analysing Police Data and Violent Crimes
 
 ---
+## Summary Statistics of Police Variables
 
+```{r P-SummaryStat, echo=FALSE}
+#Smaller Data set for this Analysis
+communities_P <- communities_clean |> 
+  select(ViolentCrimesPerPop.numeric,LemasSwFTFieldPerPop.numeric,LemasPctPolicOnPatr.numeric,LemasPctOfficDrugUn.numeric,PolicBudgPerPop.numeric,LemasSwFTPerPop.numeric) |> 
+  drop_na()
+
+SummaryStats <- communities_P |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Variable",
+    values_to = "Value"
+  ) |> 
+  group_by(Variable) |> 
+  mutate(
+    Mean = round(mean(Value), digits = 2),
+    median = median(Value),
+    SD = round(sd(Value), digits = 2)
+  ) |> 
+  select(-Value) |> 
+  unique()
+
+kable(SummaryStats, format = "html")
+
+```
+
+---
 ## Analysing Police Data and Violent Crimes
-...
 
 ```{r Police Data, echo=FALSE, fig.align='center'}
 #Smaller Data set for this Analysis
@@ -868,7 +1140,25 @@ Predict <- predict(Fit, testing_data) |>
   bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
   mutate(
     resid = ViolentCrimesPerPop.numeric - .pred
-  )
+  ) |> 
+    mutate(risk = case_when(
+      ViolentCrimesPerPop.numeric <= 1/7 ~ "Very Low Risk",
+      ViolentCrimesPerPop.numeric >1/7 & ViolentCrimesPerPop.numeric <= 2/7 ~ "Low Risk",
+      ViolentCrimesPerPop.numeric >2/7 & ViolentCrimesPerPop.numeric <= 3/7 ~ "Slightly low Risk",
+      ViolentCrimesPerPop.numeric >3/7 & ViolentCrimesPerPop.numeric <= 4/7 ~ "Somewhat Risk",
+      ViolentCrimesPerPop.numeric >4/7 & ViolentCrimesPerPop.numeric <= 5/7 ~ "Slighly High Risk",
+      ViolentCrimesPerPop.numeric >5/7 & ViolentCrimesPerPop.numeric <= 6/7 ~ "High Risk",
+      ViolentCrimesPerPop.numeric >6/7 ~ "Very High Risk"
+    ),
+    pred.risk = case_when(
+      .pred <= 1/7 ~ "Very Low Risk",
+      .pred >1/7 & .pred <= 2/7 ~ "Low Risk",
+      .pred >2/7 & .pred <= 3/7 ~ "Slightly low Risk",
+      .pred >3/7 & .pred <= 4/7 ~ "Somewhat Risk",
+      .pred >4/7 & .pred <= 5/7 ~ "Slighly High Risk",
+      .pred >5/7 & .pred <= 6/7 ~ "High Risk",
+      .pred >6/7 ~ "Very High Risk"
+    ))
 
 RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
@@ -995,7 +1285,25 @@ Predict <- predict(Fit, testing_data) |>
   bind_cols(testing_data |> select(ViolentCrimesPerPop.numeric)) |> 
   mutate(
     resid = ViolentCrimesPerPop.numeric - .pred
-  )
+  ) |> 
+    mutate(risk = case_when(
+      ViolentCrimesPerPop.numeric <= 1/7 ~ "Very Low Risk",
+      ViolentCrimesPerPop.numeric >1/7 & ViolentCrimesPerPop.numeric <= 2/7 ~ "Low Risk",
+      ViolentCrimesPerPop.numeric >2/7 & ViolentCrimesPerPop.numeric <= 3/7 ~ "Slightly low Risk",
+      ViolentCrimesPerPop.numeric >3/7 & ViolentCrimesPerPop.numeric <= 4/7 ~ "Somewhat Risk",
+      ViolentCrimesPerPop.numeric >4/7 & ViolentCrimesPerPop.numeric <= 5/7 ~ "Slighly High Risk",
+      ViolentCrimesPerPop.numeric >5/7 & ViolentCrimesPerPop.numeric <= 6/7 ~ "High Risk",
+      ViolentCrimesPerPop.numeric >6/7 ~ "Very High Risk"
+    ),
+    pred.risk = case_when(
+      .pred <= 1/7 ~ "Very Low Risk",
+      .pred >1/7 & .pred <= 2/7 ~ "Low Risk",
+      .pred >2/7 & .pred <= 3/7 ~ "Slightly low Risk",
+      .pred >3/7 & .pred <= 4/7 ~ "Somewhat Risk",
+      .pred >4/7 & .pred <= 5/7 ~ "Slighly High Risk",
+      .pred >5/7 & .pred <= 6/7 ~ "High Risk",
+      .pred >6/7 ~ "Very High Risk"
+    ))
 
 RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 

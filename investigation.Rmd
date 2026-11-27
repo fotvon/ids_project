@@ -78,7 +78,30 @@ communities_clean_df |>
     aes(x = ViolentCrimesPerPop.numeric)
   )+
   geom_histogram(bins = 7)
+
+Risky <- communities_clean_df |> 
+  select(ViolentCrimesPerPop.numeric, communityname.string) |> 
+  mutate(
+    risk = case_when(
+      ViolentCrimesPerPop.numeric <= 1/7 ~ "Very Low Risk",
+      ViolentCrimesPerPop.numeric >1/7 & ViolentCrimesPerPop.numeric <= 2/7 ~ "Low Risk",
+      ViolentCrimesPerPop.numeric >2/7 & ViolentCrimesPerPop.numeric <= 3/7 ~ "Slight Risk",
+      ViolentCrimesPerPop.numeric >3/7 & ViolentCrimesPerPop.numeric <= 4/7 ~ "Somewhat Risk",
+      ViolentCrimesPerPop.numeric >4/7 & ViolentCrimesPerPop.numeric <= 5/7 ~ "Slighly High Risk",
+      ViolentCrimesPerPop.numeric >5/7 & ViolentCrimesPerPop.numeric <= 6/7 ~ "High Risk",
+      ViolentCrimesPerPop.numeric >6/7 ~ "Very High Risk"
+    )
+  )
+
 ```
+
+```{r}
+
+communities_clean |> 
+  select(ViolentCrimesPerPop.numeric)
+
+```
+
 
 ```{r}
 #Values presented in this table are "normalised" from 0 to 1. A normalised value represents where a value sits on the range. e.g: A value of 0 represents the min/smallest population, while a value of 1 represents the largest population.
