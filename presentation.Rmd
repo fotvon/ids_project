@@ -543,7 +543,7 @@ Predict <- predict(Fit, testing_data) |>
       ViolentCrimesPerPop.numeric >1/7 & ViolentCrimesPerPop.numeric <= 2/7 ~ "Low Risk",
       ViolentCrimesPerPop.numeric >2/7 & ViolentCrimesPerPop.numeric <= 3/7 ~ "Slightly low Risk",
       ViolentCrimesPerPop.numeric >3/7 & ViolentCrimesPerPop.numeric <= 4/7 ~ "Somewhat Risk",
-      ViolentCrimesPerPop.numeric >4/7 & ViolentCrimesPerPop.numeric <= 5/7 ~ "Slighly High Risk",
+      ViolentCrimesPerPop.numeric >4/7 & ViolentCrimesPerPop.numeric <= 5/7 ~ "Slightly High Risk",
       ViolentCrimesPerPop.numeric >5/7 & ViolentCrimesPerPop.numeric <= 6/7 ~ "High Risk",
       ViolentCrimesPerPop.numeric >6/7 ~ "Very High Risk"
     ),
@@ -552,10 +552,24 @@ Predict <- predict(Fit, testing_data) |>
       .pred >1/7 & .pred <= 2/7 ~ "Low Risk",
       .pred >2/7 & .pred <= 3/7 ~ "Slightly low Risk",
       .pred >3/7 & .pred <= 4/7 ~ "Somewhat Risk",
-      .pred >4/7 & .pred <= 5/7 ~ "Slighly High Risk",
+      .pred >4/7 & .pred <= 5/7 ~ "Slightly High Risk",
       .pred >5/7 & .pred <= 6/7 ~ "High Risk",
       .pred >6/7 ~ "Very High Risk"
     ))
+
+#Look at how well the model predicts class
+ErrorMatrix_LM <- Predict |> 
+  group_by(pred.risk) |> 
+  mutate(
+    PredVsRisk = case_when(
+      pred.risk == risk ~ 1,
+      .default = 0),
+    Num_correct = sum(PredVsRisk),
+    Num_Guessed = sum(pred.risk == pred.risk),
+    Pct_Correct = sum(PredVsRisk)/sum(pred.risk == pred.risk)
+  ) |> 
+  select(Pct_Correct,pred.risk,Num_correct,Num_Guessed) |> 
+  unique()
 
 RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
@@ -575,6 +589,49 @@ StatTable_I <- tibble(Model = c("Model Income"),
                    AdjRSqrd_Train = round(c(glance(Fit)$adj.r.squared), digits = 3),
                    CV_RMSE = mean(RMSE_RSQ$rmse),
                    NumOfPred = c(nrow(summary(recipe))-1))
+```
+
+```{r NNET-Model I}
+#Get the Data
+training_data <- train |>
+    select(risk,pctWWage.numeric,pctWFarmSelf.numeric,pctWInvInc.numeric,pctWSocSec.numeric,pctWPubAsst.numeric,pctWRetire.numeric)
+testing_data <- test |>
+    select(risk,pctWWage.numeric,pctWFarmSelf.numeric,pctWInvInc.numeric,pctWSocSec.numeric,pctWPubAsst.numeric,pctWRetire.numeric)
+
+folds <- vfold_cv(training_data, v = 10)
+
+#Recipe time
+recipe <- recipe(risk ~ ., data = training_data) |> 
+  step_naomit() |> 
+  step_zv(all_predictors())
+
+#Workflow time
+communities_wflow <- workflow() |> 
+  add_model(communities_nnet_mod) |> 
+  add_recipe(recipe)
+
+#Train the Model with the Variables
+Fit <- communities_wflow |> 
+  fit(training_data)
+
+#Test the Model
+Predict <- predict(Fit, testing_data) |> 
+  bind_cols(testing_data$risk)
+
+#What is the error Matrix
+ErrorMatrix_nnet <- Predict |> 
+  group_by(.pred_class) |> 
+  mutate(
+    PredVsRisk = case_when(
+      .pred_class == ...2 ~ 1,
+      .default = 0),
+    Num_Correct = sum(PredVsRisk),
+    Num_Guessed = sum(.pred_class == .pred_class),
+    Pct_Correct = sum(PredVsRisk)/sum(.pred_class == .pred_class)
+  ) |> 
+  select(Pct_Correct,.pred_class,Num_Correct,Num_Guessed) |> 
+  unique()
+
 ```
 
 ```{r Cor-vs-Eq I, echo = FALSE}
@@ -744,7 +801,7 @@ Predict <- predict(Fit, testing_data) |>
       ViolentCrimesPerPop.numeric >1/7 & ViolentCrimesPerPop.numeric <= 2/7 ~ "Low Risk",
       ViolentCrimesPerPop.numeric >2/7 & ViolentCrimesPerPop.numeric <= 3/7 ~ "Slightly low Risk",
       ViolentCrimesPerPop.numeric >3/7 & ViolentCrimesPerPop.numeric <= 4/7 ~ "Somewhat Risk",
-      ViolentCrimesPerPop.numeric >4/7 & ViolentCrimesPerPop.numeric <= 5/7 ~ "Slighly High Risk",
+      ViolentCrimesPerPop.numeric >4/7 & ViolentCrimesPerPop.numeric <= 5/7 ~ "Slightly High Risk",
       ViolentCrimesPerPop.numeric >5/7 & ViolentCrimesPerPop.numeric <= 6/7 ~ "High Risk",
       ViolentCrimesPerPop.numeric >6/7 ~ "Very High Risk"
     ),
@@ -753,10 +810,24 @@ Predict <- predict(Fit, testing_data) |>
       .pred >1/7 & .pred <= 2/7 ~ "Low Risk",
       .pred >2/7 & .pred <= 3/7 ~ "Slightly low Risk",
       .pred >3/7 & .pred <= 4/7 ~ "Somewhat Risk",
-      .pred >4/7 & .pred <= 5/7 ~ "Slighly High Risk",
+      .pred >4/7 & .pred <= 5/7 ~ "Slightly High Risk",
       .pred >5/7 & .pred <= 6/7 ~ "High Risk",
       .pred >6/7 ~ "Very High Risk"
     ))
+
+#Look at how well the model predicts class
+ErrorMatrix_LM <- Predict |> 
+  group_by(pred.risk) |> 
+  mutate(
+    PredVsRisk = case_when(
+      pred.risk == risk ~ 1,
+      .default = 0),
+    Num_correct = sum(PredVsRisk),
+    Num_Guessed = sum(pred.risk == pred.risk),
+    Pct_Correct = sum(PredVsRisk)/sum(pred.risk == pred.risk)
+  ) |> 
+  select(Pct_Correct,pred.risk,Num_correct,Num_Guessed) |> 
+  unique()
 
 RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
@@ -776,6 +847,49 @@ StatTable_O <- tibble(Model = c("Model Occupation"),
                    AdjRSqrd_Train = round(c(glance(Fit)$adj.r.squared), digits = 3),
                    CV_RMSE = mean(RMSE_RSQ$rmse),
                    NumOfPred = c(nrow(summary(recipe))-1))
+```
+
+```{r NNET-Model O}
+#Get the Data
+training_data <- train |>
+    select(risk,PctUnemployed.numeric,PctEmploy.numeric,PctEmplManu.numeric,PctEmplProfServ.numeric)
+testing_data <- test |>
+    select(risk,PctUnemployed.numeric,PctEmploy.numeric,PctEmplManu.numeric,PctEmplProfServ.numeric)
+
+folds <- vfold_cv(training_data, v = 10)
+
+#Recipe time
+recipe <- recipe(risk ~ ., data = training_data) |> 
+  step_naomit() |> 
+  step_zv(all_predictors())
+
+#Workflow time
+communities_wflow <- workflow() |> 
+  add_model(communities_nnet_mod) |> 
+  add_recipe(recipe)
+
+#Train the Model with the Variables
+Fit <- communities_wflow |> 
+  fit(training_data)
+
+#Test the Model
+Predict <- predict(Fit, testing_data) |> 
+  bind_cols(testing_data$risk)
+
+#What is the error Matrix
+ErrorMatrix_nnet <- Predict |> 
+  group_by(.pred_class) |> 
+  mutate(
+    PredVsRisk = case_when(
+      .pred_class == ...2 ~ 1,
+      .default = 0),
+    Num_Correct = sum(PredVsRisk),
+    Num_Guessed = sum(.pred_class == .pred_class),
+    Pct_Correct = sum(PredVsRisk)/sum(.pred_class == .pred_class)
+  ) |> 
+  select(Pct_Correct,.pred_class,Num_Correct,Num_Guessed) |> 
+  unique()
+
 ```
 
 ```{r Cor-vs-Eq O, echo = FALSE}
@@ -942,7 +1056,7 @@ Predict <- predict(Fit, testing_data) |>
       ViolentCrimesPerPop.numeric >1/7 & ViolentCrimesPerPop.numeric <= 2/7 ~ "Low Risk",
       ViolentCrimesPerPop.numeric >2/7 & ViolentCrimesPerPop.numeric <= 3/7 ~ "Slightly low Risk",
       ViolentCrimesPerPop.numeric >3/7 & ViolentCrimesPerPop.numeric <= 4/7 ~ "Somewhat Risk",
-      ViolentCrimesPerPop.numeric >4/7 & ViolentCrimesPerPop.numeric <= 5/7 ~ "Slighly High Risk",
+      ViolentCrimesPerPop.numeric >4/7 & ViolentCrimesPerPop.numeric <= 5/7 ~ "Slightly High Risk",
       ViolentCrimesPerPop.numeric >5/7 & ViolentCrimesPerPop.numeric <= 6/7 ~ "High Risk",
       ViolentCrimesPerPop.numeric >6/7 ~ "Very High Risk"
     ),
@@ -951,10 +1065,24 @@ Predict <- predict(Fit, testing_data) |>
       .pred >1/7 & .pred <= 2/7 ~ "Low Risk",
       .pred >2/7 & .pred <= 3/7 ~ "Slightly low Risk",
       .pred >3/7 & .pred <= 4/7 ~ "Somewhat Risk",
-      .pred >4/7 & .pred <= 5/7 ~ "Slighly High Risk",
+      .pred >4/7 & .pred <= 5/7 ~ "Slightly High Risk",
       .pred >5/7 & .pred <= 6/7 ~ "High Risk",
       .pred >6/7 ~ "Very High Risk"
     ))
+
+#Look at how well the model predicts class
+ErrorMatrix_LM <- Predict |> 
+  group_by(pred.risk) |> 
+  mutate(
+    PredVsRisk = case_when(
+      pred.risk == risk ~ 1,
+      .default = 0),
+    Num_correct = sum(PredVsRisk),
+    Num_Guessed = sum(pred.risk == pred.risk),
+    Pct_Correct = sum(PredVsRisk)/sum(pred.risk == pred.risk)
+  ) |> 
+  select(Pct_Correct,pred.risk,Num_correct,Num_Guessed) |> 
+  unique()
 
 RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
@@ -974,6 +1102,49 @@ StatTable_E <- tibble(Model = c("Model Education"),
                    AdjRSqrd_Train = round(c(glance(Fit)$adj.r.squared), digits = 3),
                    CV_RMSE = mean(RMSE_RSQ$rmse),
                    NumOfPred = c(nrow(summary(recipe))-1))
+```
+
+```{r NNET-Model E}
+#Get the Data
+training_data <- train |>
+    select(risk,PctLess9thGrade.numeric,PctNotHSGrad.numeric,PctBSorMore.numeric)
+testing_data <- test |>
+    select(risk,PctLess9thGrade.numeric,PctNotHSGrad.numeric,PctBSorMore.numeric)
+
+folds <- vfold_cv(training_data, v = 10)
+
+#Recipe time
+recipe <- recipe(risk ~ ., data = training_data) |> 
+  step_naomit() |> 
+  step_zv(all_predictors())
+
+#Workflow time
+communities_wflow <- workflow() |> 
+  add_model(communities_nnet_mod) |> 
+  add_recipe(recipe)
+
+#Train the Model with the Variables
+Fit <- communities_wflow |> 
+  fit(training_data)
+
+#Test the Model
+Predict <- predict(Fit, testing_data) |> 
+  bind_cols(testing_data$risk)
+
+#What is the error Matrix
+ErrorMatrix_nnet <- Predict |> 
+  group_by(.pred_class) |> 
+  mutate(
+    PredVsRisk = case_when(
+      .pred_class == ...2 ~ 1,
+      .default = 0),
+    Num_Correct = sum(PredVsRisk),
+    Num_Guessed = sum(.pred_class == .pred_class),
+    Pct_Correct = sum(PredVsRisk)/sum(.pred_class == .pred_class)
+  ) |> 
+  select(Pct_Correct,.pred_class,Num_Correct,Num_Guessed) |> 
+  unique()
+
 ```
 
 ```{r Cor-vs-Eq E, echo = FALSE}
@@ -1146,7 +1317,7 @@ Predict <- predict(Fit, testing_data) |>
       ViolentCrimesPerPop.numeric >1/7 & ViolentCrimesPerPop.numeric <= 2/7 ~ "Low Risk",
       ViolentCrimesPerPop.numeric >2/7 & ViolentCrimesPerPop.numeric <= 3/7 ~ "Slightly low Risk",
       ViolentCrimesPerPop.numeric >3/7 & ViolentCrimesPerPop.numeric <= 4/7 ~ "Somewhat Risk",
-      ViolentCrimesPerPop.numeric >4/7 & ViolentCrimesPerPop.numeric <= 5/7 ~ "Slighly High Risk",
+      ViolentCrimesPerPop.numeric >4/7 & ViolentCrimesPerPop.numeric <= 5/7 ~ "Slightly High Risk",
       ViolentCrimesPerPop.numeric >5/7 & ViolentCrimesPerPop.numeric <= 6/7 ~ "High Risk",
       ViolentCrimesPerPop.numeric >6/7 ~ "Very High Risk"
     ),
@@ -1155,10 +1326,24 @@ Predict <- predict(Fit, testing_data) |>
       .pred >1/7 & .pred <= 2/7 ~ "Low Risk",
       .pred >2/7 & .pred <= 3/7 ~ "Slightly low Risk",
       .pred >3/7 & .pred <= 4/7 ~ "Somewhat Risk",
-      .pred >4/7 & .pred <= 5/7 ~ "Slighly High Risk",
+      .pred >4/7 & .pred <= 5/7 ~ "Slightly High Risk",
       .pred >5/7 & .pred <= 6/7 ~ "High Risk",
       .pred >6/7 ~ "Very High Risk"
     ))
+
+#Look at how well the model predicts class
+ErrorMatrix_LM <- Predict |> 
+  group_by(pred.risk) |> 
+  mutate(
+    PredVsRisk = case_when(
+      pred.risk == risk ~ 1,
+      .default = 0),
+    Num_correct = sum(PredVsRisk),
+    Num_Guessed = sum(pred.risk == pred.risk),
+    Pct_Correct = sum(PredVsRisk)/sum(pred.risk == pred.risk)
+  ) |> 
+  select(Pct_Correct,pred.risk,Num_correct,Num_Guessed) |> 
+  unique()
 
 RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
@@ -1178,6 +1363,51 @@ StatTable_P <- tibble(Model = c("Model Police"),
                    AdjRSqrd_Train = round(c(glance(Fit)$adj.r.squared), digits = 3),
                    CV_RMSE = mean(RMSE_RSQ$rmse),
                    NumOfPred = c(nrow(summary(recipe))-1))
+```
+
+```{r NNET-Model P}
+#Get the Data
+training_data <- train |>
+    select(risk,LemasSwFTFieldPerPop.numeric,LemasPctPolicOnPatr.numeric,LemasPctOfficDrugUn.numeric,PolicBudgPerPop.numeric,LemasSwFTPerPop.numeric,LemasGangUnitDeploy.numeric) |> 
+  drop_na()
+testing_data <- test |>
+    select(risk,LemasSwFTFieldPerPop.numeric,LemasPctPolicOnPatr.numeric,LemasPctOfficDrugUn.numeric,PolicBudgPerPop.numeric,LemasSwFTPerPop.numeric,LemasGangUnitDeploy.numeric) |> 
+  drop_na()
+
+folds <- vfold_cv(training_data, v = 10)
+
+#Recipe time
+recipe <- recipe(risk ~ ., data = training_data) |> 
+  step_naomit() |> 
+  step_zv(all_predictors())
+
+#Workflow time
+communities_wflow <- workflow() |> 
+  add_model(communities_nnet_mod) |> 
+  add_recipe(recipe)
+
+#Train the Model with the Variables
+Fit <- communities_wflow |> 
+  fit(training_data)
+
+#Test the Model
+Predict <- predict(Fit, testing_data) |> 
+  bind_cols(testing_data$risk)
+
+#What is the error Matrix
+ErrorMatrix_nnet <- Predict |> 
+  group_by(.pred_class) |> 
+  mutate(
+    PredVsRisk = case_when(
+      .pred_class == ...2 ~ 1,
+      .default = 0),
+    Num_Correct = sum(PredVsRisk),
+    Num_Guessed = sum(.pred_class == .pred_class),
+    Pct_Correct = sum(PredVsRisk)/sum(.pred_class == .pred_class)
+  ) |> 
+  select(Pct_Correct,.pred_class,Num_Correct,Num_Guessed) |> 
+  unique()
+
 ```
 
 ```{r Cor-vs-Eq P, echo=FALSE}
@@ -1291,7 +1521,7 @@ Predict <- predict(Fit, testing_data) |>
       ViolentCrimesPerPop.numeric >1/7 & ViolentCrimesPerPop.numeric <= 2/7 ~ "Low Risk",
       ViolentCrimesPerPop.numeric >2/7 & ViolentCrimesPerPop.numeric <= 3/7 ~ "Slightly low Risk",
       ViolentCrimesPerPop.numeric >3/7 & ViolentCrimesPerPop.numeric <= 4/7 ~ "Somewhat Risk",
-      ViolentCrimesPerPop.numeric >4/7 & ViolentCrimesPerPop.numeric <= 5/7 ~ "Slighly High Risk",
+      ViolentCrimesPerPop.numeric >4/7 & ViolentCrimesPerPop.numeric <= 5/7 ~ "Slightly High Risk",
       ViolentCrimesPerPop.numeric >5/7 & ViolentCrimesPerPop.numeric <= 6/7 ~ "High Risk",
       ViolentCrimesPerPop.numeric >6/7 ~ "Very High Risk"
     ),
@@ -1300,10 +1530,24 @@ Predict <- predict(Fit, testing_data) |>
       .pred >1/7 & .pred <= 2/7 ~ "Low Risk",
       .pred >2/7 & .pred <= 3/7 ~ "Slightly low Risk",
       .pred >3/7 & .pred <= 4/7 ~ "Somewhat Risk",
-      .pred >4/7 & .pred <= 5/7 ~ "Slighly High Risk",
+      .pred >4/7 & .pred <= 5/7 ~ "Slightly High Risk",
       .pred >5/7 & .pred <= 6/7 ~ "High Risk",
       .pred >6/7 ~ "Very High Risk"
     ))
+
+#Look at how well the model predicts class
+ErrorMatrix_LM <- Predict |> 
+  group_by(pred.risk) |> 
+  mutate(
+    PredVsRisk = case_when(
+      pred.risk == risk ~ 1,
+      .default = 0),
+    Num_correct = sum(PredVsRisk),
+    Num_Guessed = sum(pred.risk == pred.risk),
+    Pct_Correct = sum(PredVsRisk)/sum(pred.risk == pred.risk)
+  ) |> 
+  select(Pct_Correct,pred.risk,Num_correct,Num_Guessed) |> 
+  unique()
 
 RSqrd_Test <- rsq(Predict, truth = ViolentCrimesPerPop.numeric, .pred)
 
@@ -1324,6 +1568,53 @@ StatTable_A <- tibble(Model = c("Model All"),
                    CV_RMSE = mean(RMSE_RSQ$rmse),
                    NumOfPred = c(nrow(summary(recipe))-1))
 ```
+
+```{r}
+#Get the Data
+training_data <- train |>
+select(Variables, -ViolentCrimesPerPop.numeric,risk) |> 
+  drop_na()
+testing_data <- test |>
+select(Variables, -ViolentCrimesPerPop.numeric,risk) |> 
+  drop_na()
+
+folds <- vfold_cv(training_data, v = 10)
+
+#Recipe time
+recipe <- recipe(risk ~ ., data = training_data) |> 
+  step_naomit() |> 
+  step_zv(all_predictors())
+
+#Workflow time
+communities_wflow <- workflow() |> 
+  add_model(communities_nnet_mod) |> 
+  add_recipe(recipe)
+
+#Train the Model with the Variables
+Fit <- communities_wflow |> 
+  fit(training_data)
+
+#Test the Model
+Predict <- predict(Fit, testing_data) |> 
+  bind_cols(testing_data$risk)
+
+#What is the error Matrix
+ErrorMatrix_nnet <- Predict |> 
+  group_by(.pred_class) |> 
+  mutate(
+    PredVsRisk = case_when(
+      .pred_class == ...2 ~ 1,
+      .default = 0),
+    Num_Correct = sum(PredVsRisk),
+    Num_Guessed = sum(.pred_class == .pred_class),
+    Pct_Correct = sum(PredVsRisk)/sum(.pred_class == .pred_class)
+  ) |> 
+  select(Pct_Correct,.pred_class,Num_Correct,Num_Guessed) |> 
+  unique()
+
+```
+```
+
 
 ---
 
