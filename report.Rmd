@@ -31,7 +31,7 @@ library(tidyverse)
 
 ## Research Question
 
-Is there a relationship between violent crimes and wealth, income, education, occupation, police operations?
+What community statistics, in categories such as wealth, income, education, occupation and police operations, have the greatest effect on the amount of violent crimes in the community? 
 
 
 ## Data
