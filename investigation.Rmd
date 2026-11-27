@@ -97,7 +97,7 @@ Risky <- communities_clean_df |>
 
 ```{r}
 
-communities_clean |> 
+communities_clean_df |> 
   select(ViolentCrimesPerPop.numeric)
 
 ```
